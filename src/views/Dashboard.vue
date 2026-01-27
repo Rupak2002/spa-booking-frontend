@@ -1,17 +1,5 @@
 <template>
   <div class="min-h-screen bg-gray-50">
-    <nav class="bg-white shadow-sm">
-      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div class="flex justify-between h-16 items-center">
-          <div class="text-2xl font-bold text-indigo-600">SpaBooking</div>
-          <div class="flex items-center space-x-4">
-            <span class="text-gray-700">{{ authStore.profile?.full_name }}</span>
-            <button @click="handleLogout" class="text-gray-700 hover:text-indigo-600">Logout</button>
-          </div>
-        </div>
-      </div>
-    </nav>
-
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
       <div class="bg-white rounded-lg shadow p-6">
         <h1 class="text-3xl font-bold text-gray-900 mb-4">Welcome back!</h1>
@@ -46,15 +34,8 @@
 
 <script setup>
 import { useAuthStore } from '@/stores/auth'
-import { useRouter } from 'vue-router'
 
 const authStore = useAuthStore()
-const router = useRouter()
-
-const handleLogout = async () => {
-  await authStore.signOut()
-  router.push('/')
-}
 
 const formatDate = (dateString) => {
   if (!dateString) return ''

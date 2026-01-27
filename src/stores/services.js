@@ -1,5 +1,5 @@
 import { defineStore } from 'pinia'
-import { ref } from 'vue'
+import { ref, computed } from 'vue'
 import { supabase } from '@/lib/supabase'
 
 export const useServicesStore = defineStore('services', () => {
@@ -50,6 +50,35 @@ export const useServicesStore = defineStore('services', () => {
     } catch (err) {
       error.value = err.message
       console.error('Error fetching services:', err)
+    } finally {
+      loading.value = false
+    }
+  }
+
+  // NEW: Fetch only active services (for customers)
+  async function fetchActiveServices() {
+    // Prevent duplicate fetches
+    if (loading.value) return
+
+    loading.value = true
+    error.value = null
+
+    try {
+      const { data, error: fetchError } = await supabase
+        .from('services')
+        .select(`
+          *,
+          category:categories(id, name, icon)
+        `)
+        .eq('is_active', true)
+        .order('name')
+
+      if (fetchError) throw fetchError
+
+      services.value = data || []
+    } catch (err) {
+      error.value = err.message
+      console.error('Error fetching active services:', err)
     } finally {
       loading.value = false
     }
@@ -153,16 +182,52 @@ export const useServicesStore = defineStore('services', () => {
     }
   }
 
+  // NEW: Helper function to get category name by ID
+  function getCategoryName(categoryId) {
+    const category = categories.value.find(c => c.id === categoryId)
+    return category?.name || 'Unknown'
+  }
+
+  // NEW: Computed getter - Get services by category
+  const getServicesByCategory = computed(() => {
+    return (categoryId) => {
+      if (!categoryId) return services.value
+      return services.value.filter(service => service.category_id === categoryId)
+    }
+  })
+
+  // NEW: Computed getter - Search services by name/description
+  const searchServices = computed(() => {
+    return (query) => {
+      if (!query) return services.value
+      const lowerQuery = query.toLowerCase()
+      return services.value.filter(service => 
+        service.name.toLowerCase().includes(lowerQuery) ||
+        service.description?.toLowerCase().includes(lowerQuery)
+      )
+    }
+  })
+
   return {
+    // State
     services,
     categories,
     loading,
     error,
+    supabase, // Export supabase for use in components
+    
+    // Actions
     fetchCategories,
     fetchServices,
+    fetchActiveServices, // NEW
     createService,
     updateService,
     deleteService,
-    uploadServiceImage
+    uploadServiceImage,
+    getCategoryName, // NEW - Helper function
+    
+    // Computed Getters
+    getServicesByCategory, // NEW
+    searchServices // NEW
   }
 })

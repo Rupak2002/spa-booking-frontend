@@ -28,6 +28,11 @@ const routes = [
     component: () => import('@/views/admin/ServicesManagement.vue'),
     meta: { requiresAuth: true, requiresAdmin: true }
   },
+  {
+    path: '/services',
+    name: 'Services',
+    component: () => import('../views/Services.vue')
+  }
 ]
 
 const router = createRouter({
