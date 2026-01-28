@@ -37,17 +37,51 @@
               Dashboard
             </router-link>
 
-            <!-- Admin Link (only for admins) -->
+            <!-- NEW: Therapist Link -->
             <router-link 
-              v-if="authStore.profile.role === 'admin'"
-              to="/admin/services" 
+              v-if="authStore.isTherapist"
+              to="/therapist/availability" 
               class="text-gray-700 hover:text-purple-600 font-medium transition-colors"
               active-class="text-purple-600"
             >
-              Manage Services
+              My Availability
             </router-link>
 
-            <!-- User Profile Dropdown/Button -->
+            <!-- Admin Dropdown (only for admins) -->
+            <div v-if="authStore.isAdmin" class="relative" ref="adminMenuRef">
+              <button
+                @click="showAdminMenu = !showAdminMenu"
+                class="flex items-center text-gray-700 hover:text-purple-600 font-medium transition-colors"
+              >
+                Admin
+                <svg class="ml-1 w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                </svg>
+              </button>
+
+              <!-- Dropdown Menu -->
+              <div
+                v-if="showAdminMenu"
+                class="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg py-2 z-50 border border-gray-100"
+              >
+                <router-link
+                  to="/admin/services"
+                  @click="showAdminMenu = false"
+                  class="block px-4 py-2 text-gray-700 hover:bg-purple-50 hover:text-purple-600 transition-colors"
+                >
+                  Manage Services
+                </router-link>
+                <router-link
+                  to="/admin/therapists"
+                  @click="showAdminMenu = false"
+                  class="block px-4 py-2 text-gray-700 hover:bg-purple-50 hover:text-purple-600 transition-colors"
+                >
+                  Manage Therapists
+                </router-link>
+              </div>
+            </div>
+
+            <!-- User Profile -->
             <div class="flex items-center space-x-4">
               <span class="text-gray-600 text-sm">
                 {{ authStore.profile.full_name || authStore.profile.email }}
@@ -133,14 +167,36 @@
               Dashboard
             </router-link>
 
+            <!-- NEW: Therapist Link (Mobile) -->
             <router-link 
-              v-if="authStore.profile.role === 'admin'"
-              to="/admin/services" 
+              v-if="authStore.isTherapist"
+              to="/therapist/availability" 
               class="text-gray-700 hover:text-purple-600 font-medium"
               @click="mobileMenuOpen = false"
             >
-              Manage Services
+              My Availability
             </router-link>
+
+            <!-- Admin Links (Mobile) -->
+            <template v-if="authStore.isAdmin">
+              <div class="pl-4 border-l-2 border-purple-200 space-y-2">
+                <p class="text-xs font-semibold text-gray-500 uppercase">Admin</p>
+                <router-link 
+                  to="/admin/services" 
+                  class="block text-gray-700 hover:text-purple-600 font-medium"
+                  @click="mobileMenuOpen = false"
+                >
+                  Manage Services
+                </router-link>
+                <router-link 
+                  to="/admin/therapists" 
+                  class="block text-gray-700 hover:text-purple-600 font-medium"
+                  @click="mobileMenuOpen = false"
+                >
+                  Manage Therapists
+                </router-link>
+              </div>
+            </template>
 
             <div class="pt-4 border-t border-gray-200">
               <p class="text-gray-600 text-sm mb-2">
@@ -178,17 +234,35 @@
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { ref, onMounted, onUnmounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '../stores/auth'
 
 const authStore = useAuthStore()
 const router = useRouter()
 const mobileMenuOpen = ref(false)
+const showAdminMenu = ref(false)
+const adminMenuRef = ref(null)
 
 const handleLogout = async () => {
   await authStore.signOut()
   mobileMenuOpen.value = false
+  showAdminMenu.value = false
   router.push('/login')
 }
+
+// Close admin dropdown when clicking outside
+const handleClickOutside = (event) => {
+  if (adminMenuRef.value && !adminMenuRef.value.contains(event.target)) {
+    showAdminMenu.value = false
+  }
+}
+
+onMounted(() => {
+  document.addEventListener('click', handleClickOutside)
+})
+
+onUnmounted(() => {
+  document.removeEventListener('click', handleClickOutside)
+})
 </script>

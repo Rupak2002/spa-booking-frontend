@@ -1,6 +1,6 @@
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
-import { supabase } from '@/lib/supabase.js'
+import { supabase } from '@/lib/supabase'
 
 export const useAuthStore = defineStore('auth', () => {
   // State
@@ -18,7 +18,7 @@ export const useAuthStore = defineStore('auth', () => {
   async function signUp(email, password, fullName) {
     loading.value = true
     error.value = null
-    
+
     try {
       const { data, error: signUpError } = await supabase.auth.signUp({
         email,
@@ -33,22 +33,22 @@ export const useAuthStore = defineStore('auth', () => {
       })
 
       if (signUpError) throw signUpError
-      
+
       // Check if email confirmation is required
       // If session is null, email confirmation is needed
       const needsConfirmation = !data.session && data.user
-      
+
       if (needsConfirmation) {
-        return { 
-          success: true, 
-          needsConfirmation: true 
+        return {
+          success: true,
+          needsConfirmation: true
         }
       }
-      
+
       // If session exists, user is automatically logged in (email confirmation disabled)
       user.value = data.user
       await fetchProfile()
-      
+
       return { success: true, needsConfirmation: false }
     } catch (err) {
       console.error('Signup error:', err)
@@ -128,7 +128,7 @@ export const useAuthStore = defineStore('auth', () => {
     try {
       // Check for existing session
       const { data: { session } } = await supabase.auth.getSession()
-      
+
       if (session) {
         user.value = session.user
         await fetchProfile()
@@ -137,9 +137,9 @@ export const useAuthStore = defineStore('auth', () => {
       // Listen for auth changes
       supabase.auth.onAuthStateChange(async (event, session) => {
         console.log('Auth state changed:', event)
-        
+
         user.value = session?.user || null
-        
+
         if (session?.user) {
           await fetchProfile()
         } else {

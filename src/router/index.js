@@ -23,15 +23,27 @@ const routes = [
     component: () => import('@/views/Dashboard.vue')
   },
   {
+    path: '/services',
+    name: 'Services',
+    component: () => import('@/views/Services.vue')
+  },
+  {
     path: '/admin/services',
     name: 'AdminServices',
     component: () => import('@/views/admin/ServicesManagement.vue'),
     meta: { requiresAuth: true, requiresAdmin: true }
   },
   {
-    path: '/services',
-    name: 'Services',
-    component: () => import('../views/Services.vue')
+    path: '/admin/therapists',
+    name: 'AdminTherapists',
+    component: () => import('@/views/admin/TherapistsManagement.vue'),
+    meta: { requiresAuth: true, requiresAdmin: true }
+  },
+  {
+    path: '/therapist/availability',
+    name: 'TherapistAvailability',
+    component: () => import('@/views/therapist/MyAvailability.vue'),
+    meta: { requiresAuth: true, requiresTherapist: true }
   }
 ]
 
@@ -55,6 +67,8 @@ router.beforeEach(async (to, from, next) => {
     next('/login')
   } else if (to.meta.requiresAdmin && !authStore.isAdmin) {
     next('/dashboard') // Redirect non-admins
+  } else if (to.meta.requiresTherapist && !authStore.isTherapist) {
+    next('/dashboard') // Redirect non-therapists
   } else if (to.meta.requiresGuest && authStore.isAuthenticated) {
     next('/dashboard')
   } else {
