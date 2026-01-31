@@ -57,8 +57,8 @@ export const useServicesStore = defineStore('services', () => {
 
   // NEW: Fetch only active services (for customers)
   async function fetchActiveServices() {
-    // Prevent duplicate fetches
-    if (loading.value) return
+    // Prevent duplicate fetches - return existing services if already loading
+    if (loading.value) return services.value
 
     loading.value = true
     error.value = null
@@ -76,9 +76,11 @@ export const useServicesStore = defineStore('services', () => {
       if (fetchError) throw fetchError
 
       services.value = data || []
+      return services.value
     } catch (err) {
       error.value = err.message
       console.error('Error fetching active services:', err)
+      return []
     } finally {
       loading.value = false
     }

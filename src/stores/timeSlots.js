@@ -197,12 +197,46 @@ export const useTimeSlotsStore = defineStore('timeSlots', () => {
     }
   }
 
+  // Check if a time slot has bookings
+  async function hasBookings(id) {
+    try {
+      const { count, error: countError } = await supabase
+        .from('bookings')
+        .select('*', { count: 'exact', head: true })
+        .eq('time_slot_id', id)
+
+      if (countError) throw countError
+      return { hasBookings: count > 0, count }
+    } catch (err) {
+      console.error('Error checking bookings:', err)
+      return { hasBookings: false, count: 0 }
+    }
+  }
+
   // Delete time slot
-  async function deleteTimeSlot(id) {
+  async function deleteTimeSlot(id, forceMarkUnavailable = false) {
     loading.value = true
     error.value = null
 
     try {
+      // Check if slot has bookings
+      const { hasBookings: slotHasBookings, count } = await hasBookings(id)
+
+      if (slotHasBookings && !forceMarkUnavailable) {
+        return {
+          success: false,
+          hasBookings: true,
+          bookingCount: count,
+          error: `This time slot has ${count} booking(s) associated with it. You can mark it as unavailable instead.`
+        }
+      }
+
+      // If forcing mark as unavailable due to bookings
+      if (slotHasBookings && forceMarkUnavailable) {
+        return await updateTimeSlot(id, { is_available: false })
+      }
+
+      // No bookings, safe to delete
       const { error: deleteError } = await supabase
         .from('time_slots')
         .delete()
@@ -295,6 +329,7 @@ export const useTimeSlotsStore = defineStore('timeSlots', () => {
     deleteTimeSlot,
     toggleSlotAvailability,
     checkOverlap,
-    getSlotDuration
+    getSlotDuration,
+    hasBookings
   }
 })

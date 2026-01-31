@@ -1,61 +1,52 @@
 <template>
-  <div class="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-xl transition-shadow duration-300 cursor-pointer">
+  <div class="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-xl transition-shadow">
     <!-- Service Image -->
-    <div class="relative h-48 bg-gray-200 overflow-hidden">
+    <div class="h-48 bg-gray-200 relative overflow-hidden">
       <img 
-        v-if="service.image_url" 
+        v-if="service.image_url"
         :src="service.image_url" 
         :alt="service.name"
         class="w-full h-full object-cover"
         @error="handleImageError"
       />
-      <div v-else class="flex items-center justify-center h-full text-gray-400">
-        <svg class="w-16 h-16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <div v-else class="w-full h-full flex items-center justify-center bg-gradient-to-br from-purple-400 to-pink-400">
+        <svg class="w-20 h-20 text-white opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
         </svg>
       </div>
-      
-      <!-- Category Badge -->
-      <div class="absolute top-2 left-2">
-        <span class="bg-purple-600 text-white px-3 py-1 rounded-full text-xs font-semibold">
-          {{ service.category?.name || 'Service' }}
-        </span>
-      </div>
     </div>
 
-    <!-- Service Details -->
-    <div class="p-4">
-      <h3 class="text-lg font-semibold text-gray-800 mb-2 truncate">
+    <!-- Service Info -->
+    <div class="p-6">
+      <!-- Category Badge -->
+      <span class="inline-block px-2 py-1 bg-purple-100 text-purple-800 rounded text-xs font-semibold mb-2">
+        {{ service.category?.name || 'Service' }}
+      </span>
+
+      <!-- Service Name -->
+      <h3 class="text-xl font-bold text-gray-900 mb-2 line-clamp-1">
         {{ service.name }}
       </h3>
-      
+
+      <!-- Description -->
       <p class="text-gray-600 text-sm mb-4 line-clamp-2">
-        {{ service.description || 'Relax and rejuvenate with this amazing service.' }}
+        {{ service.description || 'No description available' }}
       </p>
 
       <!-- Price and Duration -->
-      <div class="flex items-center justify-between">
-        <div class="flex items-center space-x-4">
-          <div class="flex items-center text-purple-600">
-            <svg class="w-5 h-5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-            </svg>
-            <span class="font-bold text-lg">${{ formatPrice(service.price) }}</span>
-          </div>
-
-          <div class="flex items-center text-gray-600 text-sm">
-            <svg class="w-5 h-5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-            </svg>
-            <span>{{ service.duration }} min</span>
-          </div>
-        </div>
+      <div class="flex justify-between items-center mb-4">
+        <span class="text-2xl font-bold text-purple-600">
+          ${{ formatPrice(service.price) }}
+        </span>
+        <span class="text-gray-600 text-sm">
+          {{ service.duration }} min
+        </span>
       </div>
 
-      <!-- Book Now Button -->
-      <button 
-        @click.stop="$emit('book', service)"
-        class="mt-4 w-full bg-purple-600 hover:bg-purple-700 text-white font-semibold py-2 px-4 rounded-lg transition-colors duration-200"
+      <!-- View Details Button -->
+      <button
+        @click="$emit('view-details', service)"
+        class="w-full px-4 py-2 bg-purple-600 text-white font-semibold rounded-lg hover:bg-purple-700 transition-colors"
       >
         View Details
       </button>
@@ -64,8 +55,6 @@
 </template>
 
 <script setup>
-import { defineProps, defineEmits } from 'vue'
-
 defineProps({
   service: {
     type: Object,
@@ -73,7 +62,7 @@ defineProps({
   }
 })
 
-defineEmits(['book'])
+defineEmits(['view-details'])
 
 const formatPrice = (price) => {
   return parseFloat(price).toFixed(2)

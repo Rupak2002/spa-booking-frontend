@@ -106,7 +106,7 @@
             v-for="service in filteredServices"
             :key="service.id"
             :service="service"
-            @book="openServiceDetails"
+            @view-details="openServiceDetails"
           />
         </div>
       </div>
@@ -124,11 +124,15 @@
 
 <script setup>
 import { ref, computed, onMounted } from 'vue'
-import { useServicesStore } from '../stores/services'
-import ServiceCard from '../components/ServiceCard.vue'
-import ServiceDetailsModal from '../components/ServiceDetailsModal.vue'
+import { useRouter } from 'vue-router'
+import { useServicesStore } from '@/stores/services'
+import { useAuthStore } from '@/stores/auth'
+import ServiceCard from '@/components/ServiceCard.vue'
+import ServiceDetailsModal from '@/components/ServiceDetailsModal.vue'
 
+const router = useRouter()
 const servicesStore = useServicesStore()
+const authStore = useAuthStore()
 
 const searchQuery = ref('')
 const selectedCategory = ref('')
@@ -172,9 +176,25 @@ const openServiceDetails = (service) => {
 }
 
 const handleBooking = (service) => {
-  // TODO: Navigate to booking page (Milestone 6)
-  console.log('Booking service:', service)
-  alert('Booking feature coming in Milestone 6!')
+  // Check if user is logged in
+  if (!authStore.isAuthenticated) {
+    // Redirect to login
+    router.push({
+      path: '/login',
+      query: { redirect: `/book/${service.id}` }
+    })
+    return
+  }
+
+  // Check if user is a customer
+  if (authStore.profile?.role !== 'customer') {
+    alert('Only customers can book services. Please contact an administrator to change your role.')
+    return
+  }
+
+  // Navigate to booking page
+  router.push(`/book/${service.id}`)
+  selectedService.value = null // Close modal
 }
 
 const loadServices = async () => {

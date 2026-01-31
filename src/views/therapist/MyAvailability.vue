@@ -378,6 +378,21 @@ async function deleteSlot(slot) {
     if (result.success) {
       alert('Time slot deleted successfully!')
       await loadWeekSlots()
+    } else if (result.hasBookings) {
+      // Slot has bookings - offer to mark as unavailable instead
+      const markUnavailable = confirm(
+        `This time slot has ${result.bookingCount} booking(s) and cannot be deleted.\n\nWould you like to mark it as unavailable instead? This will prevent new bookings while keeping existing ones.`
+      )
+
+      if (markUnavailable) {
+        const updateResult = await timeSlotsStore.deleteTimeSlot(slot.id, true)
+        if (updateResult.success) {
+          alert('Time slot marked as unavailable.')
+          await loadWeekSlots()
+        } else {
+          alert('Error updating slot: ' + updateResult.error)
+        }
+      }
     } else {
       alert('Error deleting slot: ' + result.error)
     }
