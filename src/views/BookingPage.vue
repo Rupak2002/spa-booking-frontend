@@ -183,6 +183,7 @@ import { useBookingsStore } from '@/stores/bookings'
 import TherapistSelector from '@/components/TherapistSelector.vue'
 import DateSelector from '@/components/DateSelector.vue'
 import TimeSlotSelector from '@/components/TimeSlotSelector.vue'
+import { formatTime, formatFullDate } from '@/lib/dateUtils'
 
 const route = useRoute()
 const router = useRouter()
@@ -304,25 +305,7 @@ async function createReservation() {
   }
 }
 
-function formatTime(timeString) {
-  if (!timeString) return ''
-  const [hours, minutes] = timeString.split(':')
-  const hour = parseInt(hours)
-  const ampm = hour >= 12 ? 'PM' : 'AM'
-  const displayHour = hour === 0 ? 12 : hour > 12 ? hour - 12 : hour
-  return `${displayHour}:${minutes} ${ampm}`
-}
-
-function formatFullDate(dateString) {
-  if (!dateString) return ''
-  const date = new Date(dateString + 'T00:00:00')
-  return date.toLocaleDateString('en-US', {
-    weekday: 'long',
-    year: 'numeric',
-    month: 'long',
-    day: 'numeric'
-  })
-}
+// Formatting helpers imported from @/lib/dateUtils
 
 // Load data on mount
 onMounted(async () => {

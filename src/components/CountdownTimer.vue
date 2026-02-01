@@ -16,7 +16,7 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted, onUnmounted } from 'vue'
+import { ref, computed, watch, onMounted, onUnmounted } from 'vue'
 
 const props = defineProps({
   expiresAt: {
@@ -48,18 +48,34 @@ function updateTimer() {
   const now = new Date()
   const expires = new Date(props.expiresAt)
   const diff = Math.floor((expires - now) / 1000)
-  
+
   timeRemaining.value = Math.max(0, diff)
-  
+
   if (timeRemaining.value === 0) {
     emit('expired')
-    clearInterval(interval.value)
+    if (interval.value) {
+      clearInterval(interval.value)
+      interval.value = null
+    }
   }
 }
 
-onMounted(() => {
+// Start or restart the timer
+function startTimer() {
+  if (interval.value) {
+    clearInterval(interval.value)
+  }
   updateTimer()
-  interval.value = setInterval(updateTimer, 1000) // Update every second
+  interval.value = setInterval(updateTimer, 1000)
+}
+
+// Watch for prop changes and restart timer
+watch(() => props.expiresAt, () => {
+  startTimer()
+})
+
+onMounted(() => {
+  startTimer()
 })
 
 onUnmounted(() => {

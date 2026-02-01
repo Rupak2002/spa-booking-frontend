@@ -182,6 +182,7 @@ import { ref, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useBookingsStore } from '@/stores/bookings'
 import CountdownTimer from '@/components/CountdownTimer.vue'
+import { formatTime, formatFullDate as formatDate } from '@/lib/dateUtils'
 
 const route = useRoute()
 const router = useRouter()
@@ -227,23 +228,7 @@ function handleExpired() {
   bookingsStore.clearCurrentBooking()
 }
 
-function formatDate(dateString) {
-  const date = new Date(dateString + 'T00:00:00')
-  return date.toLocaleDateString('en-US', {
-    weekday: 'long',
-    year: 'numeric',
-    month: 'long',
-    day: 'numeric'
-  })
-}
-
-function formatTime(timeString) {
-  const [hours, minutes] = timeString.split(':')
-  const hour = parseInt(hours)
-  const ampm = hour >= 12 ? 'PM' : 'AM'
-  const displayHour = hour === 0 ? 12 : hour > 12 ? hour - 12 : hour
-  return `${displayHour}:${minutes} ${ampm}`
-}
+// Formatting helpers imported from @/lib/dateUtils
 
 onMounted(() => {
   loadBooking()

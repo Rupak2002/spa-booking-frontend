@@ -216,8 +216,7 @@ export const useServicesStore = defineStore('services', () => {
     categories,
     loading,
     error,
-    supabase, // Export supabase for use in components
-    
+
     // Actions
     fetchCategories,
     fetchServices,

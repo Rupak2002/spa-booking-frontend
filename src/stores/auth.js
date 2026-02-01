@@ -9,6 +9,9 @@ export const useAuthStore = defineStore('auth', () => {
   const loading = ref(false)
   const error = ref(null)
 
+  // Auth listener cleanup function
+  let authListenerUnsubscribe = null
+
   // Getters
   const isAuthenticated = computed(() => !!user.value)
   const isAdmin = computed(() => profile.value?.role === 'admin')
@@ -88,6 +91,12 @@ export const useAuthStore = defineStore('auth', () => {
     error.value = null
 
     try {
+      // Clean up auth listener before signing out
+      if (authListenerUnsubscribe) {
+        authListenerUnsubscribe()
+        authListenerUnsubscribe = null
+      }
+
       const { error: signOutError } = await supabase.auth.signOut()
       if (signOutError) throw signOutError
 
@@ -134,8 +143,13 @@ export const useAuthStore = defineStore('auth', () => {
         await fetchProfile()
       }
 
-      // Listen for auth changes
-      supabase.auth.onAuthStateChange(async (event, session) => {
+      // Clean up existing listener if any (prevents duplicate listeners on HMR)
+      if (authListenerUnsubscribe) {
+        authListenerUnsubscribe()
+      }
+
+      // Listen for auth changes and store unsubscribe function
+      const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
         console.log('Auth state changed:', event)
 
         user.value = session?.user || null
@@ -146,6 +160,8 @@ export const useAuthStore = defineStore('auth', () => {
           profile.value = null
         }
       })
+
+      authListenerUnsubscribe = () => subscription.unsubscribe()
     } catch (err) {
       console.error('Auth initialization error:', err)
     } finally {

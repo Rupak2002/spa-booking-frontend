@@ -11,8 +11,11 @@ export const useBookingsStore = defineStore('bookings', () => {
   const availableSlots = ref([])
   const currentBooking = ref(null)
   const myBookings = ref([])
-  const loading = ref(false)
+  const activeOperations = ref(0) // Track concurrent operations
   const error = ref(null)
+
+  // Computed loading state based on active operations
+  const loading = computed(() => activeOperations.value > 0)
 
   // Computed - Group slots by therapist
   const slotsByTherapist = computed(() => {
@@ -57,11 +60,9 @@ export const useBookingsStore = defineStore('bookings', () => {
    * Optionally filter by therapist and date range
    */
   async function fetchAvailableSlots(serviceId, startDate, endDate = null) {
-    if (loading.value) return
-    
-    loading.value = true
+    activeOperations.value++
     error.value = null
-    
+
     try {
       const slots = await bookingAPI.getAvailableSlots(serviceId, startDate, endDate)
       availableSlots.value = slots
@@ -71,7 +72,7 @@ export const useBookingsStore = defineStore('bookings', () => {
       console.error('Fetch slots error:', err)
       throw err
     } finally {
-      loading.value = false
+      activeOperations.value--
     }
   }
 
@@ -80,9 +81,9 @@ export const useBookingsStore = defineStore('bookings', () => {
    * Returns booking with 5-minute expiry
    */
   async function createReservation(reservationData) {
-    loading.value = true
+    activeOperations.value++
     error.value = null
-    
+
     try {
       const response = await bookingAPI.createReservation(reservationData)
       currentBooking.value = response.data.booking
@@ -92,7 +93,7 @@ export const useBookingsStore = defineStore('bookings', () => {
       console.error('Create reservation error:', err)
       throw err
     } finally {
-      loading.value = false
+      activeOperations.value--
     }
   }
 
@@ -100,9 +101,9 @@ export const useBookingsStore = defineStore('bookings', () => {
    * Confirm a PENDING reservation (after payment)
    */
   async function confirmReservation(bookingId) {
-    loading.value = true
+    activeOperations.value++
     error.value = null
-    
+
     try {
       const response = await bookingAPI.confirmReservation(bookingId)
       currentBooking.value = response.data
@@ -112,7 +113,7 @@ export const useBookingsStore = defineStore('bookings', () => {
       console.error('Confirm reservation error:', err)
       throw err
     } finally {
-      loading.value = false
+      activeOperations.value--
     }
   }
 
@@ -120,11 +121,9 @@ export const useBookingsStore = defineStore('bookings', () => {
    * Fetch customer's booking history
    */
   async function fetchMyBookings() {
-    if (loading.value) return
-    
-    loading.value = true
+    activeOperations.value++
     error.value = null
-    
+
     try {
       const bookings = await bookingAPI.getMyBookings()
       myBookings.value = bookings.all
@@ -134,7 +133,7 @@ export const useBookingsStore = defineStore('bookings', () => {
       console.error('Fetch my bookings error:', err)
       throw err
     } finally {
-      loading.value = false
+      activeOperations.value--
     }
   }
 
@@ -164,6 +163,35 @@ export const useBookingsStore = defineStore('bookings', () => {
   /**
    * Clear current booking (for cleanup)
    */
+/**
+   * Cancel a booking and update the local list reactively
+   */
+  async function cancelBooking(bookingId) {
+    activeOperations.value++
+    error.value = null
+
+    try {
+      const response = await bookingAPI.cancelBooking(bookingId)
+
+      // Update the booking in myBookings reactively — no refetch needed
+      const index = myBookings.value.findIndex(b => b.id === bookingId)
+      if (index !== -1) {
+        myBookings.value[index] = response.data
+      }
+
+      return response
+    } catch (err) {
+      error.value = err.message
+      console.error('Cancel booking error:', err)
+      throw err
+    } finally {
+      activeOperations.value--
+    }
+  }
+
+  /**
+   * Clear current booking (for cleanup)
+   */
   function clearCurrentBooking() {
     currentBooking.value = null
   }
@@ -186,6 +214,7 @@ export const useBookingsStore = defineStore('bookings', () => {
     createReservation,
     confirmReservation,
     fetchMyBookings,
+    cancelBooking,
     getSlotsByTherapist,
     getSlotsByDate,
     getSlotsByTherapistAndDate,

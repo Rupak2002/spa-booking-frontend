@@ -8,7 +8,6 @@
     <div v-if="authStore.profile?.role === 'customer'" class="space-y-6">
       <!-- Stats Cards -->
       <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <!-- Upcoming Bookings -->
         <div class="bg-white rounded-lg shadow-md p-6">
           <div class="flex items-center justify-between mb-2">
             <h3 class="text-lg font-semibold text-gray-700">Upcoming Bookings</h3>
@@ -20,7 +19,6 @@
           <p class="text-sm text-gray-500 mt-1">Confirmed appointments</p>
         </div>
 
-        <!-- Total Bookings -->
         <div class="bg-white rounded-lg shadow-md p-6">
           <div class="flex items-center justify-between mb-2">
             <h3 class="text-lg font-semibold text-gray-700">Total Bookings</h3>
@@ -32,7 +30,6 @@
           <p class="text-sm text-gray-500 mt-1">All time</p>
         </div>
 
-        <!-- Pending Bookings -->
         <div class="bg-white rounded-lg shadow-md p-6">
           <div class="flex items-center justify-between mb-2">
             <h3 class="text-lg font-semibold text-gray-700">Pending</h3>
@@ -57,6 +54,22 @@
           </router-link>
         </div>
 
+        <!-- Status Filter Tabs -->
+        <div class="flex gap-2 mb-6 flex-wrap">
+          <button
+            v-for="tab in filterTabs"
+            :key="tab.key"
+            @click="activeFilter = tab.key"
+            class="px-3 py-1 rounded-full text-sm font-medium transition-colors"
+            :class="activeFilter === tab.key
+              ? 'bg-purple-600 text-white'
+              : 'bg-gray-100 text-gray-600 hover:bg-gray-200'"
+          >
+            {{ tab.label }}
+            <span class="ml-1 text-xs opacity-75">({{ tab.count }})</span>
+          </button>
+        </div>
+
         <!-- Loading State -->
         <div v-if="bookingsStore.loading" class="text-center py-12">
           <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600 mx-auto"></div>
@@ -66,22 +79,27 @@
         <!-- Error State -->
         <div v-else-if="bookingsStore.error" class="bg-red-50 border border-red-200 rounded-lg p-4">
           <p class="text-red-800">{{ bookingsStore.error }}</p>
-          <button 
-            @click="loadBookings" 
+          <button
+            @click="loadBookings"
             class="mt-2 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700"
           >
             Try Again
           </button>
         </div>
 
-        <!-- No Bookings -->
-        <div v-else-if="bookingsStore.myBookings.length === 0" class="text-center py-12">
+        <!-- No Bookings (empty state) -->
+        <div v-else-if="filteredBookings.length === 0" class="text-center py-12">
           <svg class="mx-auto h-24 w-24 text-gray-400 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
           </svg>
-          <h3 class="text-xl font-semibold text-gray-700 mb-2">No bookings yet</h3>
-          <p class="text-gray-500 mb-4">Book your first service to get started</p>
+          <h3 class="text-xl font-semibold text-gray-700 mb-2">
+            {{ activeFilter === 'all' ? 'No bookings yet' : `No ${activeFilter} bookings` }}
+          </h3>
+          <p class="text-gray-500 mb-4">
+            {{ activeFilter === 'all' ? 'Book your first service to get started' : 'Nothing to show here' }}
+          </p>
           <router-link
+            v-if="activeFilter === 'all'"
             to="/services"
             class="inline-block px-6 py-3 bg-purple-600 text-white rounded-lg hover:bg-purple-700"
           >
@@ -91,20 +109,143 @@
 
         <!-- Bookings List -->
         <div v-else class="space-y-4">
-          <!-- Upcoming Bookings -->
-          <div v-if="upcomingBookings.length > 0">
-            <h3 class="text-lg font-semibold text-gray-800 mb-3">Upcoming</h3>
+
+          <!-- "All" view: grouped by Upcoming / Past / Cancelled -->
+          <template v-if="activeFilter === 'all'">
+            <!-- Upcoming -->
+            <div v-if="upcomingBookings.length > 0">
+              <h3 class="text-lg font-semibold text-gray-800 mb-3">Upcoming</h3>
+              <div class="space-y-3">
+                <div
+                  v-for="booking in upcomingBookings"
+                  :key="booking.id"
+                  class="border border-gray-200 rounded-lg p-4 hover:border-purple-300 transition-colors"
+                >
+                  <div class="flex items-start justify-between">
+                    <div class="flex-1">
+                      <div class="flex items-center gap-2 mb-2">
+                        <h4 class="text-lg font-semibold text-gray-900">{{ booking.service_name }}</h4>
+                        <span
+                          class="px-2 py-1 rounded-full text-xs font-semibold"
+                          :class="getStatusClass(booking.status)"
+                        >
+                          {{ booking.status.toUpperCase() }}
+                        </span>
+                      </div>
+                      <div class="grid grid-cols-1 md:grid-cols-3 gap-2 text-sm text-gray-600">
+                        <div class="flex items-center">
+                          <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                          </svg>
+                          {{ formatDate(booking.booking_date) }}
+                        </div>
+                        <div class="flex items-center">
+                          <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                          </svg>
+                          {{ formatTime(booking.start_time) }}
+                        </div>
+                        <div class="flex items-center">
+                          <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                          </svg>
+                          ${{ booking.service_price }}
+                        </div>
+                      </div>
+                    </div>
+                    <button
+                      @click="openModal(booking)"
+                      class="ml-4 px-4 py-2 text-purple-600 hover:bg-purple-50 rounded-lg transition-colors"
+                    >
+                      Details
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Past -->
+            <div v-if="pastBookings.length > 0" class="mt-6">
+              <h3 class="text-lg font-semibold text-gray-800 mb-3">Past Bookings</h3>
+              <div class="space-y-3">
+                <div
+                  v-for="booking in pastBookings"
+                  :key="booking.id"
+                  class="border border-gray-200 rounded-lg p-4 bg-gray-50"
+                >
+                  <div class="flex items-start justify-between">
+                    <div class="flex-1">
+                      <h4 class="text-lg font-semibold text-gray-700">{{ booking.service_name }}</h4>
+                      <p class="text-sm text-gray-500 mt-1">
+                        {{ formatDate(booking.booking_date) }} at {{ formatTime(booking.start_time) }}
+                      </p>
+                    </div>
+                    <div class="flex items-center gap-3">
+                      <span
+                        class="px-2 py-1 rounded-full text-xs font-semibold"
+                        :class="getStatusClass(booking.status)"
+                      >
+                        {{ booking.status.toUpperCase() }}
+                      </span>
+                      <button
+                        @click="openModal(booking)"
+                        class="px-3 py-1 text-purple-600 hover:bg-purple-50 rounded-lg transition-colors text-sm"
+                      >
+                        Details
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Cancelled -->
+            <div v-if="cancelledBookings.length > 0" class="mt-6">
+              <h3 class="text-lg font-semibold text-gray-800 mb-3">Cancelled</h3>
+              <div class="space-y-3">
+                <div
+                  v-for="booking in cancelledBookings"
+                  :key="booking.id"
+                  class="border border-gray-200 rounded-lg p-4 bg-gray-50"
+                >
+                  <div class="flex items-start justify-between">
+                    <div class="flex-1">
+                      <h4 class="text-lg font-semibold text-gray-700">{{ booking.service_name }}</h4>
+                      <p class="text-sm text-gray-500 mt-1">
+                        {{ formatDate(booking.booking_date) }} at {{ formatTime(booking.start_time) }}
+                      </p>
+                    </div>
+                    <div class="flex items-center gap-3">
+                      <span class="px-2 py-1 bg-red-100 text-red-800 rounded-full text-xs font-semibold">
+                        CANCELLED
+                      </span>
+                      <button
+                        @click="openModal(booking)"
+                        class="px-3 py-1 text-purple-600 hover:bg-purple-50 rounded-lg transition-colors text-sm"
+                      >
+                        Details
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </template>
+
+          <!-- Filtered view (non-"all" tabs) — flat list -->
+          <template v-else>
             <div class="space-y-3">
               <div
-                v-for="booking in upcomingBookings"
+                v-for="booking in filteredBookings"
                 :key="booking.id"
                 class="border border-gray-200 rounded-lg p-4 hover:border-purple-300 transition-colors"
+                :class="['cancelled', 'completed'].includes(booking.status) ? 'bg-gray-50' : ''"
               >
                 <div class="flex items-start justify-between">
                   <div class="flex-1">
                     <div class="flex items-center gap-2 mb-2">
                       <h4 class="text-lg font-semibold text-gray-900">{{ booking.service_name }}</h4>
-                      <span 
+                      <span
                         class="px-2 py-1 rounded-full text-xs font-semibold"
                         :class="getStatusClass(booking.status)"
                       >
@@ -133,7 +274,7 @@
                     </div>
                   </div>
                   <button
-                    @click="viewBookingDetails(booking)"
+                    @click="openModal(booking)"
                     class="ml-4 px-4 py-2 text-purple-600 hover:bg-purple-50 rounded-lg transition-colors"
                   >
                     Details
@@ -141,42 +282,12 @@
                 </div>
               </div>
             </div>
-          </div>
-
-          <!-- Past Bookings -->
-          <div v-if="pastBookings.length > 0" class="mt-6">
-            <h3 class="text-lg font-semibold text-gray-800 mb-3">Past Bookings</h3>
-            <div class="space-y-3">
-              <div
-                v-for="booking in pastBookings.slice(0, 3)"
-                :key="booking.id"
-                class="border border-gray-200 rounded-lg p-4 bg-gray-50"
-              >
-                <div class="flex items-start justify-between">
-                  <div class="flex-1">
-                    <h4 class="text-lg font-semibold text-gray-700">{{ booking.service_name }}</h4>
-                    <p class="text-sm text-gray-500 mt-1">
-                      {{ formatDate(booking.booking_date) }} at {{ formatTime(booking.start_time) }}
-                    </p>
-                  </div>
-                  <span class="px-2 py-1 bg-gray-200 text-gray-700 rounded-full text-xs font-semibold">
-                    COMPLETED
-                  </span>
-                </div>
-              </div>
-            </div>
-            <button
-              v-if="pastBookings.length > 3"
-              class="mt-3 text-purple-600 hover:text-purple-700 text-sm font-medium"
-            >
-              View all {{ pastBookings.length }} past bookings →
-            </button>
-          </div>
+          </template>
         </div>
       </div>
     </div>
 
-    <!-- Admin Dashboard -->
+    <!-- Admin Dashboard (unchanged) -->
     <div v-else-if="authStore.profile?.role === 'admin'" class="space-y-6">
       <div class="bg-white rounded-lg shadow-md p-6 mb-6">
         <h2 class="text-xl font-semibold text-gray-800 mb-4">Admin Actions</h2>
@@ -210,7 +321,7 @@
       </div>
     </div>
 
-    <!-- Therapist Dashboard -->
+    <!-- Therapist Dashboard (unchanged) -->
     <div v-else-if="authStore.profile?.role === 'therapist'" class="space-y-6">
       <div class="bg-white rounded-lg shadow-md p-6 mb-6">
         <h2 class="text-xl font-semibold text-gray-800 mb-4">Therapist Actions</h2>
@@ -229,101 +340,114 @@
       </div>
     </div>
   </div>
+
+  <!-- Booking Detail Modal (rendered outside the main div so z-index works cleanly) -->
+  <BookingDetailModal
+    v-if="modalOpen"
+    :is-open="modalOpen"
+    :booking="selectedBooking"
+    @close="closeModal"
+  />
 </template>
 
 <script setup>
 import { ref, computed, onMounted } from 'vue'
 import { useAuthStore } from '@/stores/auth'
 import { useBookingsStore } from '@/stores/bookings'
+import BookingDetailModal from '@/components/BookingDetailModal.vue'
+import { formatDate, formatTime, getStatusClass } from '@/lib/dateUtils'
 
 const authStore = useAuthStore()
 const bookingsStore = useBookingsStore()
 
-// Computed - Filter bookings
-const upcomingBookings = computed(() => {
+// --- Modal state ---
+const modalOpen = ref(false)
+const selectedBooking = ref({})
+
+function openModal(booking) {
+  selectedBooking.value = booking
+  modalOpen.value = true
+}
+
+function closeModal() {
+  modalOpen.value = false
+}
+
+// --- Filter state ---
+const activeFilter = ref('all')
+
+// --- Computed: booking categories (single pass optimization) ---
+const categorizedBookings = computed(() => {
   const today = new Date()
   today.setHours(0, 0, 0, 0)
-  
-  return bookingsStore.myBookings.filter(b => {
-    if (b.status !== 'confirmed') return false
+  const todayTime = today.getTime()
+
+  const result = {
+    upcoming: [],
+    past: [],
+    pending: [],
+    cancelled: []
+  }
+
+  bookingsStore.myBookings.forEach(b => {
     const bookingDate = new Date(b.booking_date + 'T00:00:00')
-    return bookingDate >= today
-  }).sort((a, b) => {
-    if (a.booking_date !== b.booking_date) {
-      return a.booking_date.localeCompare(b.booking_date)
+    const isInFuture = bookingDate.getTime() >= todayTime
+
+    if (b.status === 'cancelled') {
+      result.cancelled.push(b)
+    } else if (b.status === 'pending') {
+      result.pending.push(b)
+    } else if (isInFuture && b.status === 'confirmed') {
+      result.upcoming.push(b)
+    } else if (!isInFuture && ['confirmed', 'completed'].includes(b.status)) {
+      result.past.push(b)
     }
-    return a.start_time.localeCompare(b.start_time)
   })
+
+  // Sort each category
+  result.upcoming.sort((a, b) => a.booking_date.localeCompare(b.booking_date) || a.start_time.localeCompare(b.start_time))
+  result.past.sort((a, b) => b.booking_date.localeCompare(a.booking_date) || b.start_time.localeCompare(a.start_time))
+  result.pending.sort((a, b) => a.booking_date.localeCompare(b.booking_date))
+  result.cancelled.sort((a, b) => b.booking_date.localeCompare(a.booking_date))
+
+  return result
 })
 
-const pastBookings = computed(() => {
-  const today = new Date()
-  today.setHours(0, 0, 0, 0)
-  
-  return bookingsStore.myBookings.filter(b => {
-    const bookingDate = new Date(b.booking_date + 'T00:00:00')
-    return bookingDate < today && ['confirmed', 'completed'].includes(b.status)
-  }).sort((a, b) => {
-    if (a.booking_date !== b.booking_date) {
-      return b.booking_date.localeCompare(a.booking_date)
-    }
-    return b.start_time.localeCompare(a.start_time)
-  })
+const upcomingBookings = computed(() => categorizedBookings.value.upcoming)
+const pastBookings = computed(() => categorizedBookings.value.past)
+const pendingBookings = computed(() => categorizedBookings.value.pending)
+const cancelledBookings = computed(() => categorizedBookings.value.cancelled)
+
+// --- Filter tabs ---
+const filterTabs = computed(() => [
+  { key: 'all',        label: 'All',        count: bookingsStore.myBookings.length },
+  { key: 'upcoming',   label: 'Upcoming',   count: upcomingBookings.value.length },
+  { key: 'pending',    label: 'Pending',    count: pendingBookings.value.length },
+  { key: 'past',       label: 'Past',       count: pastBookings.value.length },
+  { key: 'cancelled',  label: 'Cancelled',  count: cancelledBookings.value.length }
+])
+
+// What the current filter tab resolves to (used for empty-state check + filtered view)
+const filteredBookings = computed(() => {
+  switch (activeFilter.value) {
+    case 'upcoming':  return upcomingBookings.value
+    case 'pending':   return pendingBookings.value
+    case 'past':      return pastBookings.value
+    case 'cancelled': return cancelledBookings.value
+    default:          return bookingsStore.myBookings
+  }
 })
 
+// --- Stats card counts ---
 const upcomingCount = computed(() => upcomingBookings.value.length)
-const totalCount = computed(() => bookingsStore.myBookings.length)
-const pendingCount = computed(() => 
-  bookingsStore.myBookings.filter(b => b.status === 'pending').length
-)
+const totalCount    = computed(() => bookingsStore.myBookings.length)
+const pendingCount  = computed(() => pendingBookings.value.length)
 
-// Methods
-function getStatusClass(status) {
-  const classes = {
-    pending: 'bg-yellow-100 text-yellow-800',
-    confirmed: 'bg-green-100 text-green-800',
-    completed: 'bg-gray-100 text-gray-800',
-    cancelled: 'bg-red-100 text-red-800'
-  }
-  return classes[status] || 'bg-gray-100 text-gray-800'
-}
+// Helpers imported from @/lib/dateUtils
 
-function formatDate(dateString) {
-  const date = new Date(dateString + 'T00:00:00')
-  const today = new Date()
-  today.setHours(0, 0, 0, 0)
-  
-  const tomorrow = new Date(today)
-  tomorrow.setDate(tomorrow.getDate() + 1)
-  
-  if (date.getTime() === today.getTime()) {
-    return 'Today'
-  } else if (date.getTime() === tomorrow.getTime()) {
-    return 'Tomorrow'
-  } else {
-    return date.toLocaleDateString('en-US', {
-      weekday: 'short',
-      month: 'short',
-      day: 'numeric'
-    })
-  }
-}
-
-function formatTime(timeString) {
-  const [hours, minutes] = timeString.split(':')
-  const hour = parseInt(hours)
-  const ampm = hour >= 12 ? 'PM' : 'AM'
-  const displayHour = hour === 0 ? 12 : hour > 12 ? hour - 12 : hour
-  return `${displayHour}:${minutes} ${ampm}`
-}
-
-function viewBookingDetails(booking) {
-  alert(`Booking Details:\n\nService: ${booking.service_name}\nDate: ${booking.booking_date}\nTime: ${booking.start_time}\nPrice: $${booking.service_price}`)
-}
-
+// --- Data loading ---
 async function loadBookings() {
   if (authStore.profile?.role !== 'customer') return
-  
   try {
     await bookingsStore.fetchMyBookings()
   } catch (error) {
@@ -332,7 +456,6 @@ async function loadBookings() {
 }
 
 onMounted(() => {
-  // Load bookings if customer
   if (authStore.profile?.role === 'customer') {
     loadBookings()
   }

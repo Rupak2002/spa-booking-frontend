@@ -19,25 +19,42 @@ const apiClient = axios.create({
   }
 })
 
+// Session cache to avoid calling getSession() on every request
+let cachedSession = null
+let sessionCacheTime = 0
+const SESSION_CACHE_TTL = 60 * 1000 // 1 minute cache
+
 /**
  * Request Interceptor
- * Automatically adds JWT token to every request
+ * Automatically adds JWT token to every request with caching
  */
 apiClient.interceptors.request.use(
   async (config) => {
-    // Get current session from Supabase
-    const { data: { session } } = await supabase.auth.getSession()
-    
-    if (session?.access_token) {
-      config.headers.Authorization = `Bearer ${session.access_token}`
+    const now = Date.now()
+
+    // Use cached session if still valid
+    if (!cachedSession || now - sessionCacheTime > SESSION_CACHE_TTL) {
+      const { data: { session } } = await supabase.auth.getSession()
+      cachedSession = session
+      sessionCacheTime = now
     }
-    
+
+    if (cachedSession?.access_token) {
+      config.headers.Authorization = `Bearer ${cachedSession.access_token}`
+    }
+
     return config
   },
   (error) => {
     return Promise.reject(error)
   }
 )
+
+// Clear session cache when auth state changes
+supabase.auth.onAuthStateChange(() => {
+  cachedSession = null
+  sessionCacheTime = 0
+})
 
 /**
  * Response Interceptor
@@ -103,6 +120,13 @@ export const bookingAPI = {
   async getMyBookings() {
     const data = await apiClient.get('/bookings/my-bookings')
     return data.data // { all: [], grouped: {} }
+  },
+
+  /**
+   * Cancel a booking
+   */
+  async cancelBooking(bookingId) {
+    return await apiClient.post(`/bookings/${bookingId}/cancel`)
   }
 }
 
