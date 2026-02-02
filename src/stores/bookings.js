@@ -11,11 +11,8 @@ export const useBookingsStore = defineStore('bookings', () => {
   const availableSlots = ref([])
   const currentBooking = ref(null)
   const myBookings = ref([])
-  const activeOperations = ref(0) // Track concurrent operations
+  const loading = ref(false)
   const error = ref(null)
-
-  // Computed loading state based on active operations
-  const loading = computed(() => activeOperations.value > 0)
 
   // Computed - Group slots by therapist
   const slotsByTherapist = computed(() => {
@@ -60,9 +57,11 @@ export const useBookingsStore = defineStore('bookings', () => {
    * Optionally filter by therapist and date range
    */
   async function fetchAvailableSlots(serviceId, startDate, endDate = null) {
-    activeOperations.value++
+    if (loading.value) return
+    
+    loading.value = true
     error.value = null
-
+    
     try {
       const slots = await bookingAPI.getAvailableSlots(serviceId, startDate, endDate)
       availableSlots.value = slots
@@ -72,7 +71,7 @@ export const useBookingsStore = defineStore('bookings', () => {
       console.error('Fetch slots error:', err)
       throw err
     } finally {
-      activeOperations.value--
+      loading.value = false
     }
   }
 
@@ -81,9 +80,9 @@ export const useBookingsStore = defineStore('bookings', () => {
    * Returns booking with 5-minute expiry
    */
   async function createReservation(reservationData) {
-    activeOperations.value++
+    loading.value = true
     error.value = null
-
+    
     try {
       const response = await bookingAPI.createReservation(reservationData)
       currentBooking.value = response.data.booking
@@ -93,27 +92,36 @@ export const useBookingsStore = defineStore('bookings', () => {
       console.error('Create reservation error:', err)
       throw err
     } finally {
-      activeOperations.value--
+      loading.value = false
     }
   }
 
   /**
    * Confirm a PENDING reservation (after payment)
+   * Updates both currentBooking (for BookingConfirmation page)
+   * and myBookings (for Dashboard modal confirm flow)
    */
   async function confirmReservation(bookingId) {
-    activeOperations.value++
+    loading.value = true
     error.value = null
-
+    
     try {
       const response = await bookingAPI.confirmReservation(bookingId)
       currentBooking.value = response.data
+
+      // Update myBookings reactively — no refetch needed
+      const index = myBookings.value.findIndex(b => b.id === bookingId)
+      if (index !== -1) {
+        myBookings.value[index] = response.data
+      }
+
       return response
     } catch (err) {
       error.value = err.message
       console.error('Confirm reservation error:', err)
       throw err
     } finally {
-      activeOperations.value--
+      loading.value = false
     }
   }
 
@@ -121,9 +129,11 @@ export const useBookingsStore = defineStore('bookings', () => {
    * Fetch customer's booking history
    */
   async function fetchMyBookings() {
-    activeOperations.value++
+    if (loading.value) return
+    
+    loading.value = true
     error.value = null
-
+    
     try {
       const bookings = await bookingAPI.getMyBookings()
       myBookings.value = bookings.all
@@ -133,7 +143,34 @@ export const useBookingsStore = defineStore('bookings', () => {
       console.error('Fetch my bookings error:', err)
       throw err
     } finally {
-      activeOperations.value--
+      loading.value = false
+    }
+  }
+
+  /**
+   * Cancel a booking and update the local list reactively
+   * No refetch needed — updates myBookings in place
+   */
+  async function cancelBooking(bookingId) {
+    loading.value = true
+    error.value = null
+
+    try {
+      const response = await bookingAPI.cancelBooking(bookingId)
+
+      // Update the booking in myBookings reactively
+      const index = myBookings.value.findIndex(b => b.id === bookingId)
+      if (index !== -1) {
+        myBookings.value[index] = response.data
+      }
+
+      return response
+    } catch (err) {
+      error.value = err.message
+      console.error('Cancel booking error:', err)
+      throw err
+    } finally {
+      loading.value = false
     }
   }
 
@@ -158,35 +195,6 @@ export const useBookingsStore = defineStore('bookings', () => {
     return availableSlots.value.filter(
       slot => slot.therapist_id === therapistId && slot.slot_date === date
     )
-  }
-
-  /**
-   * Clear current booking (for cleanup)
-   */
-/**
-   * Cancel a booking and update the local list reactively
-   */
-  async function cancelBooking(bookingId) {
-    activeOperations.value++
-    error.value = null
-
-    try {
-      const response = await bookingAPI.cancelBooking(bookingId)
-
-      // Update the booking in myBookings reactively — no refetch needed
-      const index = myBookings.value.findIndex(b => b.id === bookingId)
-      if (index !== -1) {
-        myBookings.value[index] = response.data
-      }
-
-      return response
-    } catch (err) {
-      error.value = err.message
-      console.error('Cancel booking error:', err)
-      throw err
-    } finally {
-      activeOperations.value--
-    }
   }
 
   /**

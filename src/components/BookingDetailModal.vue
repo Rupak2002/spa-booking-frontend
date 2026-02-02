@@ -131,37 +131,83 @@
         </div>
       </div>
 
-      <!-- Cancel Section -->
-      <div v-if="isCancellable" class="px-6 pb-6">
-        <!-- Default: Cancel button -->
-        <div v-if="!showConfirm">
-          <button
-            @click="showConfirm = true"
-            class="w-full px-4 py-2 border border-red-300 text-red-600 rounded-lg hover:bg-red-50 transition-colors text-sm font-medium"
-          >
-            Cancel Booking
-          </button>
+      <!-- Actions Section -->
+      <div v-if="hasActions" class="px-6 pb-6 space-y-3">
+
+        <!-- PENDING + EXPIRED: warning, no confirm button -->
+        <div v-if="booking.status === 'pending' && isExpired" class="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+          <p class="text-sm text-yellow-800 font-medium">
+            This reservation has expired. The time slot has been or will be released automatically.
+          </p>
         </div>
 
-        <!-- Confirm step: are you sure? -->
-        <div v-else class="bg-red-50 border border-red-200 rounded-lg p-4">
-          <p class="text-sm text-red-800 font-medium mb-3">
-            Are you sure you want to cancel this booking? The time slot will be released.
-          </p>
-          <div class="flex gap-2">
+        <!-- PENDING + NOT EXPIRED: Confirm button / prompt -->
+        <div v-if="booking.status === 'pending' && !isExpired">
+          <!-- Default confirm button -->
+          <div v-if="activeAction !== 'confirm'">
             <button
-              @click="handleCancel"
-              :disabled="cancelling"
-              class="flex-1 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors text-sm font-medium"
+              @click="activeAction = 'confirm'"
+              class="w-full px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors text-sm font-medium"
             >
-              {{ cancelling ? 'Cancelling...' : 'Yes, Cancel' }}
+              Confirm Booking
             </button>
+          </div>
+
+          <!-- Confirm prompt -->
+          <div v-else class="bg-purple-50 border border-purple-200 rounded-lg p-4">
+            <p class="text-sm text-purple-800 font-medium mb-3">
+              Confirm this booking? Payment will be simulated for now.
+            </p>
+            <div class="flex gap-2">
+              <button
+                @click="handleConfirm"
+                :disabled="confirming"
+                class="flex-1 px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors text-sm font-medium"
+              >
+                {{ confirming ? 'Confirming...' : 'Yes, Confirm' }}
+              </button>
+              <button
+                @click="activeAction = null"
+                class="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors text-sm font-medium"
+              >
+                Back
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- PENDING or CONFIRMED: Cancel button / prompt -->
+        <div v-if="isCancellable">
+          <!-- Default cancel button -->
+          <div v-if="activeAction !== 'cancel'">
             <button
-              @click="showConfirm = false"
-              class="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors text-sm font-medium"
+              @click="activeAction = 'cancel'"
+              class="w-full px-4 py-2 border border-red-300 text-red-600 rounded-lg hover:bg-red-50 transition-colors text-sm font-medium"
             >
-              Back
+              Cancel Booking
             </button>
+          </div>
+
+          <!-- Cancel prompt -->
+          <div v-else class="bg-red-50 border border-red-200 rounded-lg p-4">
+            <p class="text-sm text-red-800 font-medium mb-3">
+              Are you sure you want to cancel this booking? The time slot will be released.
+            </p>
+            <div class="flex gap-2">
+              <button
+                @click="handleCancel"
+                :disabled="cancelling"
+                class="flex-1 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors text-sm font-medium"
+              >
+                {{ cancelling ? 'Cancelling...' : 'Yes, Cancel' }}
+              </button>
+              <button
+                @click="activeAction = null"
+                class="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors text-sm font-medium"
+              >
+                Back
+              </button>
+            </div>
           </div>
         </div>
       </div>
@@ -193,12 +239,25 @@ const emit = defineEmits(['close'])
 const bookingsStore = useBookingsStore()
 
 // Local state
-const showConfirm = ref(false)
+const activeAction = ref(null) // null | 'confirm' | 'cancel'
+const confirming = ref(false)
 const cancelling = ref(false)
 
 // Computed
 const isCancellable = computed(() => {
   return ['pending', 'confirmed'].includes(props.booking.status)
+})
+
+// Has the 5-min reservation window passed?
+const isExpired = computed(() => {
+  if (props.booking.status !== 'pending') return false
+  if (!props.booking.reservation_expires_at) return false
+  return new Date(props.booking.reservation_expires_at) < new Date()
+})
+
+// Show actions section at all?
+const hasActions = computed(() => {
+  return props.booking.status === 'pending' || props.booking.status === 'confirmed'
 })
 
 const therapistName = computed(() => {
@@ -208,11 +267,9 @@ const therapistName = computed(() => {
 const statusClass = computed(() => getStatusClass(props.booking.status))
 
 // Timeline helpers
-// Statuses map to progression: pending = reserved, confirmed, completed
 function timelineNodeClass(stage) {
   const status = props.booking.status
 
-  // Which stages were actually reached?
   let reached = []
 
   if (status === 'pending') {
@@ -222,9 +279,6 @@ function timelineNodeClass(stage) {
   } else if (status === 'completed') {
     reached = ['reserved', 'confirmed', 'completed']
   } else if (status === 'cancelled') {
-    // Infer what stage it was at before cancellation:
-    // payment_status 'paid' → it was confirmed before cancel
-    // payment_status 'pending' → it was only reserved (pending) before cancel
     if (props.booking.payment_status === 'paid') {
       reached = ['reserved', 'confirmed']
     } else {
@@ -251,7 +305,6 @@ function connectorClass(segment) {
   if (status === 'completed') {
     activeConnectors.push('confirmed-completed')
   }
-  // Cancelled: same inference — if it was confirmed, the first connector was active
   if (status === 'cancelled' && props.booking.payment_status === 'paid') {
     activeConnectors.push('reserved-confirmed')
   }
@@ -262,20 +315,34 @@ function connectorClass(segment) {
     : 'flex-1 h-0.5 bg-gray-200 mx-1'
 }
 
-// Formatting helpers imported from @/lib/dateUtils
+// Formatting
 const formattedDate = computed(() => formatDate(props.booking.booking_date))
 const formattedStartTime = computed(() => formatTime(props.booking.start_time))
 const formattedEndTime = computed(() => formatTime(props.booking.end_time))
+
+// Confirm handler
+async function handleConfirm() {
+  confirming.value = true
+  try {
+    await bookingsStore.confirmReservation(props.booking.id)
+    close()
+  } catch (err) {
+    console.error('Confirm failed:', err)
+    activeAction.value = null
+  } finally {
+    confirming.value = false
+  }
+}
 
 // Cancel handler
 async function handleCancel() {
   cancelling.value = true
   try {
     await bookingsStore.cancelBooking(props.booking.id)
-    close() // Close modal after success — Dashboard reactively updates
+    close()
   } catch (err) {
     console.error('Cancel failed:', err)
-    showConfirm.value = false // Reset to default state on error
+    activeAction.value = null
   } finally {
     cancelling.value = false
   }
@@ -283,7 +350,7 @@ async function handleCancel() {
 
 // Close
 function close() {
-  showConfirm.value = false
+  activeAction.value = null
   emit('close')
 }
 </script>
