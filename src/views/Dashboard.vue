@@ -287,11 +287,11 @@
       </div>
     </div>
 
-    <!-- Admin Dashboard (unchanged) -->
+    <!-- Admin Dashboard -->
     <div v-else-if="authStore.profile?.role === 'admin'" class="space-y-6">
       <div class="bg-white rounded-lg shadow-md p-6 mb-6">
         <h2 class="text-xl font-semibold text-gray-800 mb-4">Admin Actions</h2>
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
           <router-link
             to="/admin/services"
             class="flex items-center p-4 bg-purple-50 rounded-lg hover:bg-purple-100 transition-colors border-2 border-purple-200"
@@ -315,6 +315,19 @@
             <div>
               <h3 class="font-semibold text-gray-800">Manage Therapists</h3>
               <p class="text-sm text-gray-600">Add and manage therapist profiles</p>
+            </div>
+          </router-link>
+
+          <router-link
+            to="/admin/bookings"
+            class="flex items-center p-4 bg-purple-50 rounded-lg hover:bg-purple-100 transition-colors border-2 border-purple-200"
+          >
+            <svg class="w-8 h-8 text-purple-600 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" />
+            </svg>
+            <div>
+              <h3 class="font-semibold text-gray-800">Manage Bookings</h3>
+              <p class="text-sm text-gray-600">View and manage all bookings</p>
             </div>
           </router-link>
         </div>
@@ -355,7 +368,6 @@ import { ref, computed, onMounted } from 'vue'
 import { useAuthStore } from '@/stores/auth'
 import { useBookingsStore } from '@/stores/bookings'
 import BookingDetailModal from '@/components/BookingDetailModal.vue'
-import { formatDate, formatTime, getStatusClass } from '@/lib/dateUtils'
 
 const authStore = useAuthStore()
 const bookingsStore = useBookingsStore()
@@ -376,47 +388,45 @@ function closeModal() {
 // --- Filter state ---
 const activeFilter = ref('all')
 
-// --- Computed: booking categories (single pass optimization) ---
-const categorizedBookings = computed(() => {
+// --- Computed: booking categories ---
+const upcomingBookings = computed(() => {
   const today = new Date()
   today.setHours(0, 0, 0, 0)
-  const todayTime = today.getTime()
 
-  const result = {
-    upcoming: [],
-    past: [],
-    pending: [],
-    cancelled: []
-  }
-
-  bookingsStore.myBookings.forEach(b => {
+  return bookingsStore.myBookings.filter(b => {
+    if (b.status !== 'confirmed') return false
     const bookingDate = new Date(b.booking_date + 'T00:00:00')
-    const isInFuture = bookingDate.getTime() >= todayTime
-
-    if (b.status === 'cancelled') {
-      result.cancelled.push(b)
-    } else if (b.status === 'pending') {
-      result.pending.push(b)
-    } else if (isInFuture && b.status === 'confirmed') {
-      result.upcoming.push(b)
-    } else if (!isInFuture && ['confirmed', 'completed'].includes(b.status)) {
-      result.past.push(b)
-    }
+    return bookingDate >= today
+  }).sort((a, b) => {
+    if (a.booking_date !== b.booking_date) return a.booking_date.localeCompare(b.booking_date)
+    return a.start_time.localeCompare(b.start_time)
   })
-
-  // Sort each category
-  result.upcoming.sort((a, b) => a.booking_date.localeCompare(b.booking_date) || a.start_time.localeCompare(b.start_time))
-  result.past.sort((a, b) => b.booking_date.localeCompare(a.booking_date) || b.start_time.localeCompare(a.start_time))
-  result.pending.sort((a, b) => a.booking_date.localeCompare(b.booking_date))
-  result.cancelled.sort((a, b) => b.booking_date.localeCompare(a.booking_date))
-
-  return result
 })
 
-const upcomingBookings = computed(() => categorizedBookings.value.upcoming)
-const pastBookings = computed(() => categorizedBookings.value.past)
-const pendingBookings = computed(() => categorizedBookings.value.pending)
-const cancelledBookings = computed(() => categorizedBookings.value.cancelled)
+const pastBookings = computed(() => {
+  const today = new Date()
+  today.setHours(0, 0, 0, 0)
+
+  return bookingsStore.myBookings.filter(b => {
+    const bookingDate = new Date(b.booking_date + 'T00:00:00')
+    return bookingDate < today && ['confirmed', 'completed'].includes(b.status)
+  }).sort((a, b) => {
+    if (a.booking_date !== b.booking_date) return b.booking_date.localeCompare(a.booking_date)
+    return b.start_time.localeCompare(a.start_time)
+  })
+})
+
+const pendingBookings = computed(() => {
+  return bookingsStore.myBookings
+    .filter(b => b.status === 'pending')
+    .sort((a, b) => a.booking_date.localeCompare(b.booking_date))
+})
+
+const cancelledBookings = computed(() => {
+  return bookingsStore.myBookings
+    .filter(b => b.status === 'cancelled')
+    .sort((a, b) => b.booking_date.localeCompare(a.booking_date))
+})
 
 // --- Filter tabs ---
 const filterTabs = computed(() => [
@@ -443,7 +453,38 @@ const upcomingCount = computed(() => upcomingBookings.value.length)
 const totalCount    = computed(() => bookingsStore.myBookings.length)
 const pendingCount  = computed(() => pendingBookings.value.length)
 
-// Helpers imported from @/lib/dateUtils
+// --- Helpers ---
+function getStatusClass(status) {
+  const classes = {
+    pending:   'bg-yellow-100 text-yellow-800',
+    confirmed: 'bg-green-100 text-green-800',
+    completed: 'bg-gray-100 text-gray-800',
+    cancelled: 'bg-red-100 text-red-800'
+  }
+  return classes[status] || 'bg-gray-100 text-gray-800'
+}
+
+function formatDate(dateString) {
+  const date = new Date(dateString + 'T00:00:00')
+  const today = new Date()
+  today.setHours(0, 0, 0, 0)
+
+  const tomorrow = new Date(today)
+  tomorrow.setDate(tomorrow.getDate() + 1)
+
+  if (date.getTime() === today.getTime()) return 'Today'
+  if (date.getTime() === tomorrow.getTime()) return 'Tomorrow'
+
+  return date.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })
+}
+
+function formatTime(timeString) {
+  const [hours, minutes] = timeString.split(':')
+  const hour = parseInt(hours)
+  const ampm = hour >= 12 ? 'PM' : 'AM'
+  const displayHour = hour === 0 ? 12 : hour > 12 ? hour - 12 : hour
+  return `${displayHour}:${minutes} ${ampm}`
+}
 
 // --- Data loading ---
 async function loadBookings() {

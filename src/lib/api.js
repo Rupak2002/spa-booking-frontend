@@ -122,12 +122,50 @@ export const bookingAPI = {
     return data.data // { all: [], grouped: {} }
   },
 
-  /**
+/**
    * Cancel a booking
    */
   async cancelBooking(bookingId) {
     return await apiClient.post(`/bookings/${bookingId}/cancel`)
+  },
+
+  /**
+   * Get all bookings (Admin only)
+   * @param {Object} filters - { status, therapist_id, customer_id, start_date, end_date }
+   */
+  async getAllBookings(filters = {}) {
+    const params = {}
+    if (filters.status) params.status = filters.status
+    if (filters.therapist_id) params.therapist_id = filters.therapist_id
+    if (filters.customer_id) params.customer_id = filters.customer_id
+    if (filters.start_date) params.start_date = filters.start_date
+    if (filters.end_date) params.end_date = filters.end_date
+    
+    const data = await apiClient.get('/bookings/admin/all', { params })
+    return data.data // { bookings: [], stats: {} }
+  },
+
+  /**
+   * Admin cancel any booking (override)
+   */
+/**
+   * Admin cancel any booking (override)
+   */
+  async adminCancelBooking(bookingId) {
+    return await apiClient.post(`/bookings/admin/${bookingId}/cancel`)
+  },
+
+  /**
+   * Admin reschedule any booking (override)
+   * @param {string} bookingId - Booking ID to reschedule
+   * @param {string} newTimeSlotId - New time slot ID
+   */
+  async adminRescheduleBooking(bookingId, newTimeSlotId) {
+    return await apiClient.post(`/bookings/admin/${bookingId}/reschedule`, {
+      new_time_slot_id: newTimeSlotId
+    })
   }
 }
+
 
 export default apiClient

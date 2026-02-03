@@ -58,6 +58,18 @@ const router = createRouter({
       component: () => import('@/views/admin/TherapistsManagement.vue'),
       meta: { requiresAuth: true, requiresAdmin: true }
     },
+    {
+      path: '/admin/therapists',
+      name: 'admin-therapists',
+      component: () => import('@/views/admin/TherapistsManagement.vue'),
+      meta: { requiresAuth: true, requiresAdmin: true }
+    },
+    {
+      path: '/admin/bookings',
+      name: 'admin-bookings',
+      component: () => import('@/views/admin/AdminBookingsManagement.vue'),
+      meta: { requiresAuth: true, requiresAdmin: true }
+    },
     // Therapist routes
     {
       path: '/therapist/availability',
@@ -65,6 +77,7 @@ const router = createRouter({
       component: () => import('@/views/therapist/MyAvailability.vue'),
       meta: { requiresAuth: true, requiresTherapist: true }
     }
+
   ]
 })
 
