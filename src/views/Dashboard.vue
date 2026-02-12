@@ -110,7 +110,7 @@
         <!-- Bookings List -->
         <div v-else class="space-y-4">
 
-          <!-- "All" view: grouped by Upcoming / Past / Cancelled -->
+          <!-- "All" view: grouped by Upcoming / Pending / Past / Cancelled -->
           <template v-if="activeFilter === 'all'">
             <!-- Upcoming -->
             <div v-if="upcomingBookings.length > 0">
@@ -130,6 +130,55 @@
                           :class="getStatusClass(booking.status)"
                         >
                           {{ booking.status.toUpperCase() }}
+                        </span>
+                      </div>
+                      <div class="grid grid-cols-1 md:grid-cols-3 gap-2 text-sm text-gray-600">
+                        <div class="flex items-center">
+                          <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                          </svg>
+                          {{ formatDate(booking.booking_date) }}
+                        </div>
+                        <div class="flex items-center">
+                          <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                          </svg>
+                          {{ formatTime(booking.start_time) }}
+                        </div>
+                        <div class="flex items-center">
+                          <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                          </svg>
+                          ${{ booking.service_price }}
+                        </div>
+                      </div>
+                    </div>
+                    <button
+                      @click="openModal(booking)"
+                      class="ml-4 px-4 py-2 text-purple-600 hover:bg-purple-50 rounded-lg transition-colors"
+                    >
+                      Details
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Pending -->
+            <div v-if="pendingBookings.length > 0" class="mt-6">
+              <h3 class="text-lg font-semibold text-gray-800 mb-3">Pending Confirmation</h3>
+              <div class="space-y-3">
+                <div
+                  v-for="booking in pendingBookings"
+                  :key="booking.id"
+                  class="border border-yellow-200 rounded-lg p-4 bg-yellow-50 hover:border-yellow-300 transition-colors"
+                >
+                  <div class="flex items-start justify-between">
+                    <div class="flex-1">
+                      <div class="flex items-center gap-2 mb-2">
+                        <h4 class="text-lg font-semibold text-gray-900">{{ booking.service_name }}</h4>
+                        <span class="px-2 py-1 rounded-full text-xs font-semibold bg-yellow-100 text-yellow-800">
+                          PENDING
                         </span>
                       </div>
                       <div class="grid grid-cols-1 md:grid-cols-3 gap-2 text-sm text-gray-600">
