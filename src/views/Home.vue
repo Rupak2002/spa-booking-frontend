@@ -2,7 +2,7 @@
   <div class="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20 text-center">
       <h1 class="text-5xl font-bold text-gray-900 mb-6">
-        Welcome to Your Spa Booking System
+        Welcome to Kaya Kesh
       </h1>
       <p class="text-xl text-gray-600 mb-8">
         Book your relaxation sessions with ease

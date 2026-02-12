@@ -13,9 +13,9 @@ export default defineConfig({
       registerType: 'autoUpdate',
       includeAssets: ['favicon.ico', 'robots.txt'],
       manifest: {
-        name: 'Serenity Spa',
-        short_name: 'Spa',
-        description: 'Book your spa appointments with ease',
+        name: 'Kaya Kesh',
+        short_name: 'Kaya Kesh',
+        description: 'Book your Kaya Kesh appointments with ease',
         theme_color: '#9333ea',
         background_color: '#ffffff',
         display: 'standalone',

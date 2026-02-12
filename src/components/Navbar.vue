@@ -5,7 +5,7 @@
         <!-- Logo/Brand -->
         <div class="flex items-center">
           <router-link to="/" class="text-2xl font-bold text-purple-600 hover:text-purple-700">
-            Spa Booking
+            Kaya Kesh
           </router-link>
         </div>
 
