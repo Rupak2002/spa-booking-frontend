@@ -115,23 +115,23 @@
 
         <!-- Mobile Menu Button -->
         <div class="md:hidden">
-          <button 
+          <button
             @click="mobileMenuOpen = !mobileMenuOpen"
-            class="text-gray-700 hover:text-purple-600 focus:outline-none"
+            class="min-w-[44px] min-h-[44px] flex items-center justify-center text-gray-700 hover:text-purple-600 hover:bg-gray-100 rounded-lg focus:outline-none transition-colors"
           >
             <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path 
+              <path
                 v-if="!mobileMenuOpen"
-                stroke-linecap="round" 
-                stroke-linejoin="round" 
-                stroke-width="2" 
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
                 d="M4 6h16M4 12h16M4 18h16"
               />
-              <path 
+              <path
                 v-else
-                stroke-linecap="round" 
-                stroke-linejoin="round" 
-                stroke-width="2" 
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
                 d="M6 18L18 6M6 6l12 12"
               />
             </svg>
@@ -141,37 +141,37 @@
 
       <!-- Mobile Menu -->
       <div v-if="mobileMenuOpen" class="md:hidden border-t border-gray-200 py-4">
-        <div class="flex flex-col space-y-4">
-          <router-link 
-            to="/" 
-            class="text-gray-700 hover:text-purple-600 font-medium"
+        <div class="flex flex-col space-y-1">
+          <router-link
+            to="/"
+            class="px-3 py-3 min-h-[44px] flex items-center text-gray-700 hover:text-purple-600 hover:bg-purple-50 rounded-lg font-medium transition-colors"
             @click="mobileMenuOpen = false"
           >
             Home
           </router-link>
-          
-          <router-link 
-            to="/services" 
-            class="text-gray-700 hover:text-purple-600 font-medium"
+
+          <router-link
+            to="/services"
+            class="px-3 py-3 min-h-[44px] flex items-center text-gray-700 hover:text-purple-600 hover:bg-purple-50 rounded-lg font-medium transition-colors"
             @click="mobileMenuOpen = false"
           >
             Services
           </router-link>
 
           <template v-if="authStore.profile">
-            <router-link 
-              to="/dashboard" 
-              class="text-gray-700 hover:text-purple-600 font-medium"
+            <router-link
+              to="/dashboard"
+              class="px-3 py-3 min-h-[44px] flex items-center text-gray-700 hover:text-purple-600 hover:bg-purple-50 rounded-lg font-medium transition-colors"
               @click="mobileMenuOpen = false"
             >
               Dashboard
             </router-link>
 
-            <!-- NEW: Therapist Link (Mobile) -->
-            <router-link 
+            <!-- Therapist Link (Mobile) -->
+            <router-link
               v-if="authStore.isTherapist"
-              to="/therapist/availability" 
-              class="text-gray-700 hover:text-purple-600 font-medium"
+              to="/therapist/availability"
+              class="px-3 py-3 min-h-[44px] flex items-center text-gray-700 hover:text-purple-600 hover:bg-purple-50 rounded-lg font-medium transition-colors"
               @click="mobileMenuOpen = false"
             >
               My Availability
@@ -179,18 +179,18 @@
 
             <!-- Admin Links (Mobile) -->
             <template v-if="authStore.isAdmin">
-              <div class="pl-4 border-l-2 border-purple-200 space-y-2">
-                <p class="text-xs font-semibold text-gray-500 uppercase">Admin</p>
-                <router-link 
-                  to="/admin/services" 
-                  class="block text-gray-700 hover:text-purple-600 font-medium"
+              <div class="mt-2 pl-4 border-l-2 border-purple-200 space-y-1">
+                <p class="text-xs font-semibold text-gray-500 uppercase px-3 py-2">Admin</p>
+                <router-link
+                  to="/admin/services"
+                  class="px-3 py-3 min-h-[44px] flex items-center text-gray-700 hover:text-purple-600 hover:bg-purple-50 rounded-lg font-medium transition-colors"
                   @click="mobileMenuOpen = false"
                 >
                   Manage Services
                 </router-link>
-                <router-link 
-                  to="/admin/therapists" 
-                  class="block text-gray-700 hover:text-purple-600 font-medium"
+                <router-link
+                  to="/admin/therapists"
+                  class="px-3 py-3 min-h-[44px] flex items-center text-gray-700 hover:text-purple-600 hover:bg-purple-50 rounded-lg font-medium transition-colors"
                   @click="mobileMenuOpen = false"
                 >
                   Manage Therapists
@@ -198,13 +198,13 @@
               </div>
             </template>
 
-            <div class="pt-4 border-t border-gray-200">
-              <p class="text-gray-600 text-sm mb-2">
+            <div class="pt-4 mt-2 border-t border-gray-200">
+              <p class="text-gray-600 text-sm mb-3 px-3">
                 {{ authStore.profile.full_name || authStore.profile.email }}
               </p>
-              <button 
+              <button
                 @click="handleLogout"
-                class="w-full px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700"
+                class="w-full px-4 py-3 min-h-[44px] bg-red-600 text-white rounded-lg hover:bg-red-700 font-medium transition-colors"
               >
                 Logout
               </button>
@@ -212,16 +212,16 @@
           </template>
 
           <template v-else>
-            <router-link 
-              to="/login" 
-              class="text-gray-700 hover:text-purple-600 font-medium"
+            <router-link
+              to="/login"
+              class="px-3 py-3 min-h-[44px] flex items-center text-gray-700 hover:text-purple-600 hover:bg-purple-50 rounded-lg font-medium transition-colors"
               @click="mobileMenuOpen = false"
             >
               Login
             </router-link>
-            <router-link 
-              to="/register" 
-              class="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 text-center"
+            <router-link
+              to="/register"
+              class="px-4 py-3 min-h-[44px] flex items-center justify-center bg-purple-600 text-white rounded-lg hover:bg-purple-700 font-medium transition-colors"
               @click="mobileMenuOpen = false"
             >
               Sign Up

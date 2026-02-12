@@ -1,11 +1,11 @@
 <template>
   <div class="max-w-7xl mx-auto px-4 py-8">
-    <div class="flex items-center justify-between mb-8">
-      <h1 class="text-3xl font-bold text-gray-900">Bookings Management</h1>
+    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6 sm:mb-8">
+      <h1 class="text-2xl sm:text-3xl font-bold text-gray-900">Bookings Management</h1>
       <button
         @click="exportToCSV"
         :disabled="filteredBookings.length === 0"
-        class="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center gap-2"
+        class="px-4 py-3 min-h-[44px] bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center justify-center gap-2 text-sm sm:text-base"
       >
         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
@@ -15,32 +15,32 @@
     </div>
 
     <!-- Stats Cards -->
-    <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-      <div class="bg-white rounded-lg shadow-md p-6">
-        <h3 class="text-sm font-semibold text-gray-600 mb-2">Total Bookings</h3>
-        <p class="text-3xl font-bold text-gray-900">{{ stats.total }}</p>
+    <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-6 mb-6 sm:mb-8">
+      <div class="bg-white rounded-lg shadow-md p-4 sm:p-6">
+        <h3 class="text-xs sm:text-sm font-semibold text-gray-600 mb-1 sm:mb-2">Total Bookings</h3>
+        <p class="text-2xl sm:text-3xl font-bold text-gray-900">{{ stats.total }}</p>
       </div>
 
-      <div class="bg-white rounded-lg shadow-md p-6">
-        <h3 class="text-sm font-semibold text-gray-600 mb-2">Pending</h3>
-        <p class="text-3xl font-bold text-yellow-600">{{ stats.by_status.pending }}</p>
+      <div class="bg-white rounded-lg shadow-md p-4 sm:p-6">
+        <h3 class="text-xs sm:text-sm font-semibold text-gray-600 mb-1 sm:mb-2">Pending</h3>
+        <p class="text-2xl sm:text-3xl font-bold text-yellow-600">{{ stats.by_status.pending }}</p>
       </div>
 
-      <div class="bg-white rounded-lg shadow-md p-6">
-        <h3 class="text-sm font-semibold text-gray-600 mb-2">Confirmed</h3>
-        <p class="text-3xl font-bold text-green-600">{{ stats.by_status.confirmed }}</p>
+      <div class="bg-white rounded-lg shadow-md p-4 sm:p-6">
+        <h3 class="text-xs sm:text-sm font-semibold text-gray-600 mb-1 sm:mb-2">Confirmed</h3>
+        <p class="text-2xl sm:text-3xl font-bold text-green-600">{{ stats.by_status.confirmed }}</p>
       </div>
 
-      <div class="bg-white rounded-lg shadow-md p-6">
-        <h3 class="text-sm font-semibold text-gray-600 mb-2">Revenue</h3>
-        <p class="text-3xl font-bold text-purple-600">${{ stats.total_revenue.toFixed(2) }}</p>
+      <div class="bg-white rounded-lg shadow-md p-4 sm:p-6">
+        <h3 class="text-xs sm:text-sm font-semibold text-gray-600 mb-1 sm:mb-2">Revenue</h3>
+        <p class="text-2xl sm:text-3xl font-bold text-purple-600">${{ stats.total_revenue.toFixed(2) }}</p>
       </div>
     </div>
 
     <!-- Filters -->
-    <div class="bg-white rounded-lg shadow-md p-6 mb-8">
-      <h2 class="text-lg font-semibold text-gray-900 mb-4">Filters</h2>
-      <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+    <div class="bg-white rounded-lg shadow-md p-4 sm:p-6 mb-6 sm:mb-8">
+      <h2 class="text-base sm:text-lg font-semibold text-gray-900 mb-4">Filters</h2>
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <!-- Status Filter -->
         <div>
           <label class="block text-sm font-medium text-gray-700 mb-2">Status</label>
@@ -99,16 +99,16 @@
         </div>
       </div>
 
-      <div class="mt-4 flex gap-2">
+      <div class="mt-4 flex flex-col sm:flex-row gap-2">
         <button
           @click="clearFilters"
-          class="px-4 py-2 text-gray-600 hover:text-gray-900 text-sm font-medium"
+          class="px-4 py-3 min-h-[44px] text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg text-sm font-medium transition-colors"
         >
           Clear Filters
         </button>
         <button
           @click="applyFilters"
-          class="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 text-sm font-medium"
+          class="px-4 py-3 min-h-[44px] bg-purple-600 text-white rounded-lg hover:bg-purple-700 text-sm font-medium transition-colors"
         >
           Apply Filters
         </button>
@@ -244,18 +244,17 @@
                   </span>
                 </td>
 
-                <td class="px-6 py-4 whitespace-nowrap text-sm">
-                  <div v-if="['pending', 'confirmed'].includes(booking.status)" class="flex gap-2">
+                <td class="px-4 sm:px-6 py-4 whitespace-nowrap text-sm">
+                  <div v-if="['pending', 'confirmed'].includes(booking.status)" class="flex flex-col sm:flex-row gap-1 sm:gap-2">
                     <button
                       @click="openRescheduleModal(booking)"
-                      class="text-purple-600 hover:text-purple-800 font-medium"
+                      class="px-3 py-2 min-h-[44px] text-purple-600 hover:text-purple-800 hover:bg-purple-50 rounded-lg font-medium transition-colors"
                     >
                       Reschedule
                     </button>
-                    <span class="text-gray-300">|</span>
                     <button
                       @click="confirmCancel(booking)"
-                      class="text-red-600 hover:text-red-800 font-medium"
+                      class="px-3 py-2 min-h-[44px] text-red-600 hover:text-red-800 hover:bg-red-50 rounded-lg font-medium transition-colors"
                     >
                       Cancel
                     </button>
@@ -279,23 +278,23 @@
         <!-- Calendar -->
         <div v-else>
           <!-- Month Navigation -->
-          <div class="flex items-center justify-between mb-6">
+          <div class="flex items-center justify-between mb-4 sm:mb-6">
             <button
               @click="previousMonth"
-              class="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+              class="p-3 min-w-[44px] min-h-[44px] hover:bg-gray-100 rounded-lg transition-colors flex items-center justify-center"
             >
               <svg class="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
               </svg>
             </button>
-            
-            <h2 class="text-xl font-bold text-gray-900">
+
+            <h2 class="text-lg sm:text-xl font-bold text-gray-900">
               {{ monthNames[currentMonth] }} {{ currentYear }}
             </h2>
 
             <button
               @click="nextMonth"
-              class="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+              class="p-3 min-w-[44px] min-h-[44px] hover:bg-gray-100 rounded-lg transition-colors flex items-center justify-center"
             >
               <svg class="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
@@ -303,53 +302,61 @@
             </button>
           </div>
 
-          <!-- Day Headers -->
-          <div class="grid grid-cols-7 gap-2 mb-2">
-            <div
-              v-for="day in dayNames"
-              :key="day"
-              class="text-center text-xs font-semibold text-gray-600 py-2"
-            >
-              {{ day }}
-            </div>
-          </div>
-
-          <!-- Calendar Grid -->
-          <div class="grid grid-cols-7 gap-2">
-            <div
-              v-for="day in calendarDays"
-              :key="day.dateString"
-              class="min-h-24 border border-gray-200 rounded-lg p-2"
-              :class="{
-                'bg-gray-50': !day.isCurrentMonth,
-                'bg-white': day.isCurrentMonth,
-                'ring-2 ring-purple-500': day.isToday
-              }"
-            >
-              <!-- Date Number -->
-              <div
-                class="text-sm font-medium mb-1"
-                :class="day.isCurrentMonth ? 'text-gray-900' : 'text-gray-400'"
-              >
-                {{ day.date }}
+          <!-- Calendar wrapper with horizontal scroll on mobile -->
+          <div class="overflow-x-auto -mx-4 sm:mx-0 px-4 sm:px-0">
+            <div class="min-w-[640px]">
+              <!-- Day Headers -->
+              <div class="grid grid-cols-7 gap-1 sm:gap-2 mb-2">
+                <div
+                  v-for="day in dayNames"
+                  :key="day"
+                  class="text-center text-xs font-semibold text-gray-600 py-2"
+                >
+                  {{ day }}
+                </div>
               </div>
 
-              <!-- Bookings on this date -->
-              <div class="space-y-1">
+              <!-- Calendar Grid -->
+              <div class="grid grid-cols-7 gap-1 sm:gap-2">
                 <div
-                  v-for="booking in bookingsByDate[day.dateString] || []"
-                  :key="booking.id"
-                  @click="showBookingDetail(booking)"
-                  class="text-xs p-1 rounded cursor-pointer hover:opacity-80 transition-opacity"
-                  :class="getCalendarEventClass(booking.status)"
+                  v-for="day in calendarDays"
+                  :key="day.dateString"
+                  class="min-h-20 sm:min-h-24 border border-gray-200 rounded-lg p-1.5 sm:p-2"
+                  :class="{
+                    'bg-gray-50': !day.isCurrentMonth,
+                    'bg-white': day.isCurrentMonth,
+                    'ring-2 ring-purple-500': day.isToday
+                  }"
                 >
-                  <div class="font-medium truncate">{{ booking.service_name }}</div>
-                  <div class="truncate">{{ formatTime(booking.start_time) }}</div>
-                  <div class="truncate text-gray-600">{{ booking.customer.full_name }}</div>
+                  <!-- Date Number -->
+                  <div
+                    class="text-xs sm:text-sm font-medium mb-1"
+                    :class="day.isCurrentMonth ? 'text-gray-900' : 'text-gray-400'"
+                  >
+                    {{ day.date }}
+                  </div>
+
+                  <!-- Bookings on this date -->
+                  <div class="space-y-1">
+                    <div
+                      v-for="booking in bookingsByDate[day.dateString] || []"
+                      :key="booking.id"
+                      @click="showBookingDetail(booking)"
+                      class="text-xs p-1.5 sm:p-2 min-h-[44px] rounded cursor-pointer hover:opacity-80 transition-opacity"
+                      :class="getCalendarEventClass(booking.status)"
+                    >
+                      <div class="font-medium truncate">{{ booking.service_name }}</div>
+                      <div class="truncate">{{ formatTime(booking.start_time) }}</div>
+                      <div class="truncate text-gray-600 hidden sm:block">{{ booking.customer.full_name }}</div>
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>
           </div>
+
+          <!-- Mobile hint -->
+          <p class="text-xs text-gray-500 text-center mt-3 sm:hidden">← Scroll horizontally to see full calendar →</p>
         </div>
       </div>
     </div>
@@ -358,23 +365,23 @@
   <!-- Booking Detail Modal -->
   <div
     v-if="showDetailModal"
-    class="fixed inset-0 z-50 flex items-center justify-center"
+    class="fixed inset-0 z-50 flex items-center justify-center p-4"
   >
     <div class="absolute inset-0 bg-black/40" @click="showDetailModal = false"></div>
-    <div class="relative bg-white rounded-xl shadow-xl w-full max-w-md mx-4 p-6">
-      <div class="flex items-start justify-between mb-4">
+    <div class="relative bg-white rounded-xl shadow-xl w-full max-w-md max-h-[90vh] overflow-y-auto">
+      <div class="sticky top-0 bg-white flex items-start justify-between p-4 sm:p-6 pb-4 border-b border-gray-100">
         <h3 class="text-lg font-bold text-gray-900">Booking Details</h3>
         <button
           @click="showDetailModal = false"
-          class="text-gray-400 hover:text-gray-600"
+          class="min-w-[44px] min-h-[44px] flex items-center justify-center text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg transition-colors -mr-2 -mt-2"
         >
-          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
           </svg>
         </button>
       </div>
 
-      <div v-if="selectedBooking" class="space-y-3">
+      <div v-if="selectedBooking" class="p-4 sm:p-6 pt-4 space-y-3">
         <div>
           <span class="text-sm text-gray-500">Service:</span>
           <p class="font-medium">{{ selectedBooking.service_name }}</p>
@@ -417,13 +424,13 @@
         <div v-if="['pending', 'confirmed'].includes(selectedBooking.status)" class="pt-4 space-y-2">
           <button
             @click="openRescheduleModal(selectedBooking)"
-            class="w-full px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 font-medium"
+            class="w-full px-4 py-3 min-h-[44px] bg-purple-600 text-white rounded-lg hover:bg-purple-700 font-medium transition-colors"
           >
             Reschedule Booking
           </button>
           <button
             @click="confirmCancel(selectedBooking)"
-            class="w-full px-4 py-2 border border-red-300 text-red-600 rounded-lg hover:bg-red-50 font-medium"
+            class="w-full px-4 py-3 min-h-[44px] border border-red-300 text-red-600 rounded-lg hover:bg-red-50 font-medium transition-colors"
           >
             Cancel Booking
           </button>
@@ -435,10 +442,10 @@
   <!-- Cancel Confirmation Modal -->
   <div
     v-if="showCancelModal"
-    class="fixed inset-0 z-50 flex items-center justify-center"
+    class="fixed inset-0 z-50 flex items-center justify-center p-4"
   >
     <div class="absolute inset-0 bg-black/40" @click="showCancelModal = false"></div>
-    <div class="relative bg-white rounded-xl shadow-xl w-full max-w-md mx-4 p-6">
+    <div class="relative bg-white rounded-xl shadow-xl w-full max-w-md max-h-[90vh] overflow-y-auto p-4 sm:p-6">
       <h3 class="text-lg font-bold text-gray-900 mb-4">Cancel Booking</h3>
       <p class="text-gray-700 mb-2">
         Are you sure you want to cancel this booking?
@@ -451,17 +458,17 @@
       <p class="text-sm text-gray-600 mb-6">
         The time slot will be released and the customer will be notified.
       </p>
-      <div class="flex gap-3">
+      <div class="flex flex-col sm:flex-row gap-3">
         <button
           @click="handleAdminCancel"
           :disabled="cancelling"
-          class="flex-1 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 disabled:opacity-50 font-medium"
+          class="flex-1 px-4 py-3 min-h-[44px] bg-red-600 text-white rounded-lg hover:bg-red-700 disabled:opacity-50 font-medium transition-colors"
         >
           {{ cancelling ? 'Cancelling...' : 'Yes, Cancel Booking' }}
         </button>
         <button
           @click="showCancelModal = false"
-          class="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50"
+          class="px-4 py-3 min-h-[44px] border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
         >
           Back
         </button>

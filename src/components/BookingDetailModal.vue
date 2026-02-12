@@ -10,12 +10,12 @@
     ></div>
 
     <!-- Modal -->
-    <div class="relative bg-white rounded-xl shadow-xl w-full max-w-md mx-4 overflow-hidden">
+    <div class="relative bg-white rounded-xl shadow-xl w-full max-w-md mx-4 max-h-[90vh] overflow-hidden flex flex-col">
 
       <!-- Header -->
-      <div class="flex items-start justify-between p-6 pb-4">
+      <div class="flex items-start justify-between p-4 sm:p-6 pb-4 flex-shrink-0">
         <div>
-          <h2 class="text-xl font-bold text-gray-900">{{ booking.service_name }}</h2>
+          <h2 class="text-lg sm:text-xl font-bold text-gray-900">{{ booking.service_name }}</h2>
           <span
             class="inline-block mt-1 px-2 py-1 rounded-full text-xs font-semibold"
             :class="statusClass"
@@ -25,17 +25,19 @@
         </div>
         <button
           @click="close"
-          class="text-gray-400 hover:text-gray-600 transition-colors"
+          class="min-w-[44px] min-h-[44px] flex items-center justify-center text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg transition-colors -mr-2 -mt-2"
         >
-          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
           </svg>
         </button>
       </div>
 
-      <!-- Status Timeline -->
-      <div class="px-6 py-4 border-t border-b border-gray-100">
-        <div class="flex items-center justify-between">
+      <!-- Scrollable Content -->
+      <div class="overflow-y-auto flex-1">
+        <!-- Status Timeline -->
+        <div class="px-4 sm:px-6 py-4 border-t border-b border-gray-100">
+          <div class="flex items-center justify-between">
           <!-- Reserved -->
           <div class="flex flex-col items-center">
             <div :class="timelineNodeClass('reserved')">
@@ -74,8 +76,8 @@
         </div>
       </div>
 
-      <!-- Booking Details -->
-      <div class="p-6 space-y-3">
+        <!-- Booking Details -->
+        <div class="p-4 sm:p-6 space-y-3">
         <!-- Therapist -->
         <div class="flex items-center text-sm text-gray-700">
           <svg class="w-4 h-4 mr-3 text-gray-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -129,10 +131,11 @@
           <span class="text-gray-500 w-20 flex-shrink-0">Notes</span>
           <span class="font-medium">{{ booking.notes }}</span>
         </div>
+        </div>
       </div>
 
       <!-- Actions Section -->
-      <div v-if="hasActions" class="px-6 pb-6 space-y-3">
+      <div v-if="hasActions" class="px-4 sm:px-6 pb-6 space-y-3 flex-shrink-0">
 
         <!-- PENDING + EXPIRED: warning, no confirm button -->
         <div v-if="booking.status === 'pending' && isExpired" class="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
@@ -147,7 +150,7 @@
           <div v-if="activeAction !== 'confirm'">
             <button
               @click="activeAction = 'confirm'"
-              class="w-full px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors text-sm font-medium"
+              class="w-full px-4 py-3 min-h-[44px] bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors text-sm font-medium"
             >
               Confirm Booking
             </button>
@@ -162,7 +165,7 @@
               <button
                 @click="handleConfirm"
                 :disabled="confirming"
-                class="flex-1 px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors text-sm font-medium"
+                class="flex-1 px-4 py-3 min-h-[44px] bg-purple-600 text-white rounded-lg hover:bg-purple-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors text-sm font-medium"
               >
                 {{ confirming ? 'Confirming...' : 'Yes, Confirm' }}
               </button>
@@ -182,7 +185,7 @@
           <div v-if="activeAction !== 'cancel'">
             <button
               @click="activeAction = 'cancel'"
-              class="w-full px-4 py-2 border border-red-300 text-red-600 rounded-lg hover:bg-red-50 transition-colors text-sm font-medium"
+              class="w-full px-4 py-3 min-h-[44px] border border-red-300 text-red-600 rounded-lg hover:bg-red-50 transition-colors text-sm font-medium"
             >
               Cancel Booking
             </button>
@@ -197,7 +200,7 @@
               <button
                 @click="handleCancel"
                 :disabled="cancelling"
-                class="flex-1 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors text-sm font-medium"
+                class="flex-1 px-4 py-3 min-h-[44px] bg-red-600 text-white rounded-lg hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors text-sm font-medium"
               >
                 {{ cancelling ? 'Cancelling...' : 'Yes, Cancel' }}
               </button>

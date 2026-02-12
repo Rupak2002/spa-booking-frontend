@@ -1,17 +1,17 @@
 <template>
   <div class="max-w-6xl mx-auto px-4 py-8">
     <!-- Header with Service Info -->
-    <div class="bg-white rounded-lg shadow-md p-6 mb-6">
-      <div class="flex items-start gap-6">
-        <img 
-          v-if="service?.image_url" 
-          :src="service.image_url" 
+    <div class="bg-white rounded-lg shadow-md p-4 sm:p-6 mb-6">
+      <div class="flex flex-col sm:flex-row items-start gap-4 sm:gap-6">
+        <img
+          v-if="service?.image_url"
+          :src="service.image_url"
           :alt="service.name"
-          class="w-24 h-24 object-cover rounded-lg"
+          class="w-full sm:w-24 h-40 sm:h-24 object-cover rounded-lg"
         />
-        <div class="flex-1">
-          <h1 class="text-3xl font-bold text-gray-900">{{ service?.name }}</h1>
-          <p class="text-gray-600 mt-2">{{ service?.description }}</p>
+        <div class="flex-1 w-full">
+          <h1 class="text-2xl sm:text-3xl font-bold text-gray-900">{{ service?.name }}</h1>
+          <p class="text-gray-600 mt-2 text-sm sm:text-base">{{ service?.description }}</p>
           <div class="flex gap-4 mt-4">
             <span class="text-lg font-semibold text-purple-600">
               ${{ service?.price }}
@@ -30,34 +30,34 @@
     </div>
 
     <!-- Booking Steps -->
-    <div class="bg-white rounded-lg shadow-md p-6">
+    <div class="bg-white rounded-lg shadow-md p-4 sm:p-6">
       <!-- Progress Indicator -->
-      <div class="mb-8">
+      <div class="mb-6 sm:mb-8">
         <div class="flex items-center justify-between">
-          <div 
-            v-for="(step, index) in steps" 
+          <div
+            v-for="(step, index) in steps"
             :key="index"
             class="flex-1 flex items-center"
           >
-            <div class="flex items-center gap-2">
-              <div 
-                class="w-8 h-8 rounded-full flex items-center justify-center font-semibold"
-                :class="currentStep >= index + 1 
-                  ? 'bg-purple-600 text-white' 
+            <div class="flex items-center gap-1 sm:gap-2">
+              <div
+                class="w-10 h-10 sm:w-11 sm:h-11 rounded-full flex items-center justify-center font-semibold text-sm sm:text-base"
+                :class="currentStep >= index + 1
+                  ? 'bg-purple-600 text-white'
                   : 'bg-gray-200 text-gray-600'"
               >
                 {{ index + 1 }}
               </div>
-              <span 
-                class="text-sm font-medium hidden md:inline"
+              <span
+                class="text-xs sm:text-sm font-medium hidden sm:inline"
                 :class="currentStep >= index + 1 ? 'text-purple-600' : 'text-gray-600'"
               >
                 {{ step }}
               </span>
             </div>
-            <div 
-              v-if="index < steps.length - 1" 
-              class="flex-1 h-1 mx-4"
+            <div
+              v-if="index < steps.length - 1"
+              class="flex-1 h-1 mx-2 sm:mx-4"
               :class="currentStep > index + 1 ? 'bg-purple-600' : 'bg-gray-200'"
             ></div>
           </div>
@@ -142,11 +142,11 @@
       </div>
 
       <!-- Navigation Buttons -->
-      <div class="flex justify-between pt-6 border-t">
+      <div class="flex justify-between gap-4 pt-6 border-t">
         <button
           v-if="currentStep > 1"
           @click="previousStep"
-          class="px-6 py-3 border border-gray-300 text-gray-700 font-semibold rounded-lg hover:bg-gray-50 transition-colors"
+          class="px-4 sm:px-6 py-3 min-h-[44px] border border-gray-300 text-gray-700 font-semibold rounded-lg hover:bg-gray-50 transition-colors text-sm sm:text-base"
         >
           ← Back
         </button>
@@ -156,7 +156,7 @@
           v-if="currentStep < 4"
           @click="nextStep"
           :disabled="!canProceed"
-          class="px-6 py-3 bg-purple-600 text-white font-semibold rounded-lg hover:bg-purple-700 transition-colors disabled:bg-gray-300 disabled:cursor-not-allowed"
+          class="px-4 sm:px-6 py-3 min-h-[44px] bg-purple-600 text-white font-semibold rounded-lg hover:bg-purple-700 transition-colors disabled:bg-gray-300 disabled:cursor-not-allowed text-sm sm:text-base"
         >
           Continue →
         </button>
@@ -165,9 +165,9 @@
           v-else
           @click="createReservation"
           :disabled="submitting"
-          class="px-6 py-3 bg-purple-600 text-white font-semibold rounded-lg hover:bg-purple-700 transition-colors disabled:bg-gray-300 disabled:cursor-not-allowed"
+          class="px-4 sm:px-6 py-3 min-h-[44px] bg-purple-600 text-white font-semibold rounded-lg hover:bg-purple-700 transition-colors disabled:bg-gray-300 disabled:cursor-not-allowed text-sm sm:text-base"
         >
-          <span v-if="submitting">Creating Reservation...</span>
+          <span v-if="submitting">Creating...</span>
           <span v-else>Confirm Booking</span>
         </button>
       </div>
