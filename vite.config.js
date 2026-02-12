@@ -49,10 +49,12 @@ export default defineConfig({
         ]
       },
       workbox: {
+        navigateFallback: 'index.html',
+        navigateFallbackDenylist: [/^\/offline\.html$/],
         // Cache strategies for different resource types
         runtimeCaching: [
           {
-            // Cache API requests with network-first strategy
+            // Cache backend API requests
             urlPattern: /^https:\/\/.*\/api\/.*/i,
             handler: 'NetworkFirst',
             options: {
@@ -60,6 +62,21 @@ export default defineConfig({
               expiration: {
                 maxEntries: 50,
                 maxAgeSeconds: 60 * 60 // 1 hour
+              },
+              cacheableResponse: {
+                statuses: [0, 200]
+              }
+            }
+          },
+          {
+            // Cache Supabase requests (auth, services, profiles)
+            urlPattern: /^https:\/\/.*\.supabase\.co\/.*/i,
+            handler: 'NetworkFirst',
+            options: {
+              cacheName: 'supabase-cache',
+              expiration: {
+                maxEntries: 50,
+                maxAgeSeconds: 60 * 5 // 5 minutes
               },
               cacheableResponse: {
                 statuses: [0, 200]
@@ -107,7 +124,7 @@ export default defineConfig({
         globPatterns: ['**/*.{js,css,html,ico,png,svg,woff,woff2}']
       },
       devOptions: {
-        enabled: true // Enable PWA in development for testing
+        enabled: process.env.NODE_ENV === 'development'
       }
     })
   ],
