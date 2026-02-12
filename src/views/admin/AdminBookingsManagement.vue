@@ -534,7 +534,15 @@ const selectedBooking = ref(null)
 const cancelling = ref(false)
 
 // Computed
-const filteredBookings = computed(() => bookings.value)
+const filteredBookings = computed(() => {
+  return bookings.value.filter(b => {
+    if (filters.value.status && b.status !== filters.value.status) return false
+    if (filters.value.therapist_id && b.therapist_id !== filters.value.therapist_id) return false
+    if (filters.value.start_date && b.booking_date < filters.value.start_date) return false
+    if (filters.value.end_date && b.booking_date > filters.value.end_date) return false
+    return true
+  })
+})
 
 // Calendar computed
 const calendarDays = computed(() => {
@@ -688,6 +696,8 @@ async function handleAdminCancel() {
     } else if (bookingToCancel.value.status === 'confirmed') {
       stats.value.by_status.confirmed--
       stats.value.total_revenue -= parseFloat(bookingToCancel.value.service_price)
+    } else if (bookingToCancel.value.status === 'completed') {
+      stats.value.by_status.completed--
     }
 
     showCancelModal.value = false

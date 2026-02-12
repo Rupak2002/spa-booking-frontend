@@ -368,6 +368,7 @@ import { ref, computed, onMounted } from 'vue'
 import { useAuthStore } from '@/stores/auth'
 import { useBookingsStore } from '@/stores/bookings'
 import BookingDetailModal from '@/components/BookingDetailModal.vue'
+import { formatDate, formatTime, getStatusClass } from '@/lib/dateUtils'
 
 const authStore = useAuthStore()
 const bookingsStore = useBookingsStore()
@@ -453,38 +454,7 @@ const upcomingCount = computed(() => upcomingBookings.value.length)
 const totalCount    = computed(() => bookingsStore.myBookings.length)
 const pendingCount  = computed(() => pendingBookings.value.length)
 
-// --- Helpers ---
-function getStatusClass(status) {
-  const classes = {
-    pending:   'bg-yellow-100 text-yellow-800',
-    confirmed: 'bg-green-100 text-green-800',
-    completed: 'bg-gray-100 text-gray-800',
-    cancelled: 'bg-red-100 text-red-800'
-  }
-  return classes[status] || 'bg-gray-100 text-gray-800'
-}
-
-function formatDate(dateString) {
-  const date = new Date(dateString + 'T00:00:00')
-  const today = new Date()
-  today.setHours(0, 0, 0, 0)
-
-  const tomorrow = new Date(today)
-  tomorrow.setDate(tomorrow.getDate() + 1)
-
-  if (date.getTime() === today.getTime()) return 'Today'
-  if (date.getTime() === tomorrow.getTime()) return 'Tomorrow'
-
-  return date.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })
-}
-
-function formatTime(timeString) {
-  const [hours, minutes] = timeString.split(':')
-  const hour = parseInt(hours)
-  const ampm = hour >= 12 ? 'PM' : 'AM'
-  const displayHour = hour === 0 ? 12 : hour > 12 ? hour - 12 : hour
-  return `${displayHour}:${minutes} ${ampm}`
-}
+// --- Helpers (imported from @/lib/dateUtils) ---
 
 // --- Data loading ---
 async function loadBookings() {

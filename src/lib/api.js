@@ -148,9 +148,6 @@ export const bookingAPI = {
   /**
    * Admin cancel any booking (override)
    */
-/**
-   * Admin cancel any booking (override)
-   */
   async adminCancelBooking(bookingId) {
     return await apiClient.post(`/bookings/admin/${bookingId}/cancel`)
   },

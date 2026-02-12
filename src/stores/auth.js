@@ -103,6 +103,20 @@ export const useAuthStore = defineStore('auth', () => {
       user.value = null
       profile.value = null
 
+      // Reset other stores to prevent data leaking to the next user
+      const { useBookingsStore } = await import('@/stores/bookings')
+      const { useServicesStore } = await import('@/stores/services')
+      const { useTherapistsStore } = await import('@/stores/therapists')
+      const bookingsStore = useBookingsStore()
+      const servicesStore = useServicesStore()
+      const therapistsStore = useTherapistsStore()
+      bookingsStore.myBookings = []
+      bookingsStore.currentBooking = null
+      bookingsStore.availableSlots = []
+      servicesStore.services = []
+      servicesStore.categories = []
+      therapistsStore.therapists = []
+
       return { success: true }
     } catch (err) {
       error.value = err.message

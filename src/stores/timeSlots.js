@@ -264,7 +264,7 @@ export const useTimeSlotsStore = defineStore('timeSlots', () => {
     try {
       let query = supabase
         .from('time_slots')
-        .select('id')
+        .select('id, start_time, end_time')
         .eq('therapist_id', therapistId)
         .eq('slot_date', date)
 
@@ -276,25 +276,7 @@ export const useTimeSlotsStore = defineStore('timeSlots', () => {
 
       if (error) throw error
 
-      // Check if any existing slot overlaps with the new slot
-      for (const slot of data) {
-        const { data: existingSlot } = await supabase
-          .from('time_slots')
-          .select('start_time, end_time')
-          .eq('id', slot.id)
-          .single()
-
-        if (existingSlot) {
-          const overlap = timeRangesOverlap(
-            startTime, endTime,
-            existingSlot.start_time, existingSlot.end_time
-          )
-          
-          if (overlap) return true
-        }
-      }
-
-      return false
+      return data.some(slot => timeRangesOverlap(startTime, endTime, slot.start_time, slot.end_time))
     } catch (err) {
       console.error('Error checking overlap:', err)
       return false
