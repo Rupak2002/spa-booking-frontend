@@ -86,6 +86,26 @@ export const useAuthStore = defineStore('auth', () => {
     }
   }
 
+  async function signInWithGoogle() {
+    loading.value = true
+    error.value = null
+
+    try {
+      const { error: oauthError } = await supabase.auth.signInWithOAuth({
+        provider: 'google',
+        options: {
+          redirectTo: `${window.location.origin}/dashboard`
+        }
+      })
+      if (oauthError) throw oauthError
+    } catch (err) {
+      error.value = err.message
+      return { success: false, error: err.message }
+    } finally {
+      loading.value = false
+    }
+  }
+
   async function signOut() {
     loading.value = true
     error.value = null
@@ -193,6 +213,7 @@ export const useAuthStore = defineStore('auth', () => {
     isTherapist,
     signUp,
     signIn,
+    signInWithGoogle,
     signOut,
     fetchProfile,
     initialize
