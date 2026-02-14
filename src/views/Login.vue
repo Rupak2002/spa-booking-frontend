@@ -6,9 +6,7 @@
       </div>
       
       <form class="mt-8 space-y-6 bg-white p-8 rounded-lg shadow" @submit.prevent="handleLogin">
-        <div v-if="errorMessage" class="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded">
-          {{ errorMessage }}
-        </div>
+        <ErrorAlert v-if="errorMessage" :message="errorMessage" />
 
         <div class="space-y-4">
           <div>
@@ -18,6 +16,7 @@
               v-model="email"
               type="email"
               required
+              autocomplete="email"
               class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
             />
           </div>
@@ -29,6 +28,7 @@
               v-model="password"
               type="password"
               required
+              autocomplete="current-password"
               class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
             />
           </div>
@@ -80,6 +80,7 @@
 import { ref } from 'vue'
 import { useAuthStore } from '@/stores/auth'
 import { useRouter } from 'vue-router'
+import ErrorAlert from '@/components/ui/ErrorAlert.vue'
 
 const authStore = useAuthStore()
 const router = useRouter()

@@ -1,5 +1,5 @@
 <template>
-  <div class="max-w-6xl mx-auto px-4 py-8">
+  <main class="max-w-6xl mx-auto px-4 py-8" aria-label="Booking wizard">
     <!-- Header with Service Info -->
     <div class="bg-white rounded-lg shadow-md p-4 sm:p-6 mb-6">
       <div class="flex flex-col sm:flex-row items-start gap-4 sm:gap-6">
@@ -25,9 +25,7 @@
     </div>
 
     <!-- Error Message -->
-    <div v-if="error" class="bg-red-50 border border-red-200 rounded-lg p-4 mb-6">
-      <p class="text-red-800">{{ error }}</p>
-    </div>
+    <ErrorAlert v-if="error" :message="error" class="mb-6" />
 
     <!-- Booking Steps -->
     <div class="bg-white rounded-lg shadow-md p-4 sm:p-6">
@@ -45,6 +43,7 @@
                 :class="currentStep >= index + 1
                   ? 'bg-purple-600 text-white'
                   : 'bg-gray-200 text-gray-600'"
+                :aria-current="currentStep === index + 1 ? 'step' : undefined"
               >
                 {{ index + 1 }}
               </div>
@@ -172,7 +171,7 @@
         </button>
       </div>
     </div>
-  </div>
+  </main>
 </template>
 
 <script setup>
@@ -181,6 +180,7 @@ import { useRoute, useRouter } from 'vue-router'
 import { useServicesStore } from '@/stores/services'
 import { useBookingsStore } from '@/stores/bookings'
 import TherapistSelector from '@/components/TherapistSelector.vue'
+import ErrorAlert from '@/components/ui/ErrorAlert.vue'
 import DateSelector from '@/components/DateSelector.vue'
 import TimeSlotSelector from '@/components/TimeSlotSelector.vue'
 import { formatTime, formatFullDate } from '@/lib/dateUtils'

@@ -2,14 +2,16 @@
   <div class="therapist-selector">
     <h3 class="text-lg font-semibold mb-4">Select a Therapist</h3>
     
-    <div v-if="loading" class="text-center py-8">
-      <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-600 mx-auto"></div>
-      <p class="mt-2 text-gray-600">Loading therapists...</p>
+    <div v-if="loading" class="py-8">
+      <LoadingSpinner size="sm" message="Loading therapists..." />
     </div>
 
-    <div v-else-if="therapistsWithSlots.length === 0" class="text-center py-8 text-gray-600">
-      <p>No therapists available for this service at the moment.</p>
-    </div>
+    <EmptyState
+      v-else-if="therapistsWithSlots.length === 0"
+      icon="user"
+      title="No Therapists Available"
+      message="No therapists available for this service at the moment."
+    />
 
     <div v-else class="grid grid-cols-1 md:grid-cols-2 gap-4">
       <div
@@ -47,6 +49,8 @@
 
 <script setup>
 import { computed } from 'vue'
+import LoadingSpinner from '@/components/ui/LoadingSpinner.vue'
+import EmptyState from '@/components/ui/EmptyState.vue'
 
 const props = defineProps({
   slotsByTherapist: {

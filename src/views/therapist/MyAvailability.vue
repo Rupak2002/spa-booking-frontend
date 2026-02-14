@@ -7,16 +7,23 @@
         <p class="text-gray-600 mt-2">Manage your available time slots for bookings</p>
       </div>
 
+      <!-- Slot Action Notification -->
+      <div v-if="slotMessage.text" :class="slotMessage.type === 'success' ? 'bg-green-50 border-green-200 text-green-800' : 'bg-red-50 border-red-200 text-red-800'" class="mb-4 border rounded-lg p-4 flex items-center justify-between">
+        <p class="text-sm">{{ slotMessage.text }}</p>
+        <button @click="slotMessage.text = ''" class="ml-4 font-bold opacity-70 hover:opacity-100">&times;</button>
+      </div>
+
       <!-- Loading State -->
-      <div v-if="loading" class="text-center py-12">
-        <div class="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600"></div>
-        <p class="mt-4 text-gray-600">Loading your schedule...</p>
+      <div v-if="loading" class="py-12">
+        <LoadingSpinner size="md" message="Loading your schedule..." />
       </div>
 
       <!-- Not a Therapist Error -->
-      <div v-else-if="!therapistProfile" class="bg-yellow-50 border border-yellow-200 rounded-lg p-6">
-        <p class="text-yellow-800">You don't have a therapist profile. Please contact an administrator.</p>
-      </div>
+      <ErrorAlert
+        v-else-if="!therapistProfile"
+        variant="warning"
+        message="You don't have a therapist profile. Please contact an administrator."
+      />
 
       <!-- Main Content -->
       <div v-else>
@@ -58,24 +65,82 @@
         </div>
 
         <!-- Action Buttons -->
-        <div class="flex gap-4 mb-6">
+        <div class="flex flex-col sm:flex-row gap-3 mb-6">
           <button
             @click="showCreateSlotModal = true"
             class="px-6 py-3 bg-purple-600 text-white font-semibold rounded-lg hover:bg-purple-700 transition-colors"
           >
             + Add Time Slot
           </button>
-          
           <button
             @click="showBulkCreateModal = true"
             class="px-6 py-3 bg-green-600 text-white font-semibold rounded-lg hover:bg-green-700 transition-colors"
           >
-            📅 Bulk Create (Copy to Multiple Days)
+            📅 Bulk Create
           </button>
         </div>
 
-        <!-- Weekly Calendar Grid -->
-        <div class="bg-white rounded-lg shadow-md overflow-hidden">
+        <!-- Mobile: vertical day list -->
+        <div class="md:hidden space-y-4">
+          <div
+            v-for="day in weekDays"
+            :key="day.date"
+            class="bg-white rounded-lg shadow-sm overflow-hidden"
+          >
+            <!-- Day header -->
+            <div
+              class="flex items-center justify-between px-4 py-3 border-b border-gray-100"
+              :class="isToday(day.date) ? 'bg-purple-50' : 'bg-gray-50'"
+            >
+              <div class="flex items-center gap-3">
+                <div
+                  class="w-10 h-10 rounded-full flex flex-col items-center justify-center text-center"
+                  :class="isToday(day.date) ? 'bg-purple-600 text-white' : 'bg-white border border-gray-200 text-gray-800'"
+                >
+                  <span class="text-xs leading-none">{{ formatDayName(day.date) }}</span>
+                  <span class="text-sm font-bold leading-none mt-0.5">{{ formatDayNumber(day.date) }}</span>
+                </div>
+                <span class="text-sm text-gray-500">{{ formatMonthName(day.date) }}</span>
+              </div>
+              <span class="text-xs text-gray-400">{{ getTimeSlotsForDay(day.date).length }} slot{{ getTimeSlotsForDay(day.date).length !== 1 ? 's' : '' }}</span>
+            </div>
+
+            <!-- Slots for this day -->
+            <div class="divide-y divide-gray-100">
+              <div
+                v-for="slot in getTimeSlotsForDay(day.date)"
+                :key="slot.id"
+                class="flex items-center justify-between px-4 py-3 cursor-pointer hover:bg-gray-50 transition-colors"
+                :class="slot.is_available ? 'border-l-4 border-green-500' : 'border-l-4 border-gray-400'"
+                @click="editSlot(slot)"
+              >
+                <div>
+                  <p class="text-sm font-medium text-gray-800">{{ formatTime(slot.start_time) }} – {{ formatTime(slot.end_time) }}</p>
+                  <p class="text-xs text-gray-500">{{ calculateDuration(slot.start_time, slot.end_time) }} min ·
+                    <span :class="slot.is_available ? 'text-green-700' : 'text-gray-500'">
+                      {{ slot.is_available ? 'Available' : 'Unavailable' }}
+                    </span>
+                  </p>
+                </div>
+                <button
+                  @click.stop="deleteSlot(slot)"
+                  class="p-2 text-red-400 hover:text-red-600 rounded-lg hover:bg-red-50 transition-colors"
+                >
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                  </svg>
+                </button>
+              </div>
+
+              <div v-if="getTimeSlotsForDay(day.date).length === 0" class="px-4 py-4 text-sm text-gray-400 text-center">
+                No slots
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Desktop: 7-column weekly grid -->
+        <div class="hidden md:block bg-white rounded-lg shadow-md overflow-hidden">
           <!-- Days of Week Header -->
           <div class="grid grid-cols-7 border-b border-gray-200">
             <div
@@ -84,15 +149,11 @@
               class="p-4 text-center border-r border-gray-200 last:border-r-0"
               :class="{ 'bg-purple-50': isToday(day.date) }"
             >
-              <div class="text-sm font-semibold text-gray-600">
-                {{ formatDayName(day.date) }}
-              </div>
+              <div class="text-sm font-semibold text-gray-600">{{ formatDayName(day.date) }}</div>
               <div class="text-2xl font-bold mt-1" :class="isToday(day.date) ? 'text-purple-600' : 'text-gray-800'">
                 {{ formatDayNumber(day.date) }}
               </div>
-              <div class="text-xs text-gray-500 mt-1">
-                {{ formatMonthName(day.date) }}
-              </div>
+              <div class="text-xs text-gray-500 mt-1">{{ formatMonthName(day.date) }}</div>
             </div>
           </div>
 
@@ -101,20 +162,15 @@
             <div
               v-for="day in weekDays"
               :key="day.date"
-              class="min-h-[400px] p-3 border-r border-gray-100 last:border-r-0"
+              class="min-h-100 p-3 border-r border-gray-100 last:border-r-0"
               :class="{ 'bg-purple-50/30': isToday(day.date) }"
             >
-              <!-- Time Slots for This Day -->
               <div class="space-y-2">
                 <div
                   v-for="slot in getTimeSlotsForDay(day.date)"
                   :key="slot.id"
                   class="p-3 rounded-lg border-l-4 cursor-pointer transition-all hover:shadow-md"
-                  :class="[
-                    slot.is_available 
-                      ? 'bg-green-50 border-green-500 hover:bg-green-100' 
-                      : 'bg-gray-50 border-gray-400 hover:bg-gray-100'
-                  ]"
+                  :class="slot.is_available ? 'bg-green-50 border-green-500 hover:bg-green-100' : 'bg-gray-50 border-gray-400 hover:bg-gray-100'"
                   @click="editSlot(slot)"
                 >
                   <div class="flex items-start justify-between">
@@ -122,11 +178,9 @@
                       <div class="font-semibold text-sm text-gray-800">
                         {{ formatTime(slot.start_time) }} - {{ formatTime(slot.end_time) }}
                       </div>
-                      <div class="text-xs text-gray-600 mt-1">
-                        {{ calculateDuration(slot.start_time, slot.end_time) }} min
-                      </div>
+                      <div class="text-xs text-gray-600 mt-1">{{ calculateDuration(slot.start_time, slot.end_time) }} min</div>
                       <div class="mt-1">
-                        <span 
+                        <span
                           class="text-xs px-2 py-1 rounded-full"
                           :class="slot.is_available ? 'bg-green-100 text-green-800' : 'bg-gray-200 text-gray-600'"
                         >
@@ -134,11 +188,7 @@
                         </span>
                       </div>
                     </div>
-                    
-                    <button
-                      @click.stop="deleteSlot(slot)"
-                      class="text-red-500 hover:text-red-700 ml-2"
-                    >
+                    <button @click.stop="deleteSlot(slot)" class="text-red-500 hover:text-red-700 ml-2">
                       <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
                       </svg>
@@ -146,7 +196,6 @@
                   </div>
                 </div>
 
-                <!-- Empty State for Day -->
                 <div v-if="getTimeSlotsForDay(day.date).length === 0" class="text-center py-8">
                   <svg class="mx-auto h-12 w-12 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
@@ -231,12 +280,15 @@ import { useTherapistsStore } from '../../stores/therapists'
 import { useTimeSlotsStore } from '../../stores/timeSlots'
 import TimeSlotFormModal from '../../components/TimeSlotFormModal.vue'
 import BulkCreateModal from '../../components/BulkCreateModal.vue'
+import LoadingSpinner from '@/components/ui/LoadingSpinner.vue'
+import ErrorAlert from '@/components/ui/ErrorAlert.vue'
 
 const therapistsStore = useTherapistsStore()
 const timeSlotsStore = useTimeSlotsStore()
 
 const loading = ref(true)
 const therapistProfile = ref(null)
+const slotMessage = ref({ text: '', type: 'success' })
 const currentWeekStart = ref(getMonday(new Date()))
 const showCreateSlotModal = ref(false)
 const showBulkCreateModal = ref(false)
@@ -374,9 +426,10 @@ async function deleteSlot(slot) {
   )
 
   if (confirmed) {
+    slotMessage.value = { text: '', type: 'success' }
     const result = await timeSlotsStore.deleteTimeSlot(slot.id)
     if (result.success) {
-      alert('Time slot deleted successfully!')
+      slotMessage.value = { text: 'Time slot deleted successfully.', type: 'success' }
       await loadWeekSlots()
     } else if (result.hasBookings) {
       // Slot has bookings - offer to mark as unavailable instead
@@ -387,14 +440,14 @@ async function deleteSlot(slot) {
       if (markUnavailable) {
         const updateResult = await timeSlotsStore.deleteTimeSlot(slot.id, true)
         if (updateResult.success) {
-          alert('Time slot marked as unavailable.')
+          slotMessage.value = { text: 'Time slot marked as unavailable.', type: 'success' }
           await loadWeekSlots()
         } else {
-          alert('Error updating slot: ' + updateResult.error)
+          slotMessage.value = { text: 'Error updating slot: ' + updateResult.error, type: 'error' }
         }
       }
     } else {
-      alert('Error deleting slot: ' + result.error)
+      slotMessage.value = { text: 'Error deleting slot: ' + result.error, type: 'error' }
     }
   }
 }

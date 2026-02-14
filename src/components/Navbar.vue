@@ -51,10 +51,13 @@
             <div v-if="authStore.isAdmin" class="relative" ref="adminMenuRef">
               <button
                 @click="showAdminMenu = !showAdminMenu"
+                :aria-expanded="showAdminMenu"
+                aria-haspopup="true"
+                aria-controls="admin-dropdown"
                 class="flex items-center text-gray-700 hover:text-purple-600 font-medium transition-colors"
               >
                 Admin
-                <svg class="ml-1 w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg class="ml-1 w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
                 </svg>
               </button>
@@ -62,11 +65,14 @@
               <!-- Dropdown Menu -->
               <div
                 v-if="showAdminMenu"
+                id="admin-dropdown"
+                role="menu"
                 class="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg py-2 z-50 border border-gray-100"
               >
                 <router-link
                   to="/admin/services"
                   @click="showAdminMenu = false"
+                  role="menuitem"
                   class="block px-4 py-2 text-gray-700 hover:bg-purple-50 hover:text-purple-600 transition-colors"
                 >
                   Manage Services
@@ -74,6 +80,7 @@
                 <router-link
                   to="/admin/therapists"
                   @click="showAdminMenu = false"
+                  role="menuitem"
                   class="block px-4 py-2 text-gray-700 hover:bg-purple-50 hover:text-purple-600 transition-colors"
                 >
                   Manage Therapists
@@ -117,9 +124,12 @@
         <div class="md:hidden">
           <button
             @click="mobileMenuOpen = !mobileMenuOpen"
+            :aria-expanded="mobileMenuOpen"
+            aria-controls="mobile-menu"
+            :aria-label="mobileMenuOpen ? 'Close navigation menu' : 'Open navigation menu'"
             class="min-w-[44px] min-h-[44px] flex items-center justify-center text-gray-700 hover:text-purple-600 hover:bg-gray-100 rounded-lg focus:outline-none transition-colors"
           >
-            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
               <path
                 v-if="!mobileMenuOpen"
                 stroke-linecap="round"
@@ -140,7 +150,7 @@
       </div>
 
       <!-- Mobile Menu -->
-      <div v-if="mobileMenuOpen" class="md:hidden border-t border-gray-200 py-4">
+      <div v-if="mobileMenuOpen" id="mobile-menu" class="md:hidden border-t border-gray-200 py-4">
         <div class="flex flex-col space-y-1">
           <router-link
             to="/"
@@ -258,11 +268,20 @@ const handleClickOutside = (event) => {
   }
 }
 
+const handleKeydown = (event) => {
+  if (event.key === 'Escape') {
+    showAdminMenu.value = false
+    mobileMenuOpen.value = false
+  }
+}
+
 onMounted(() => {
   document.addEventListener('click', handleClickOutside)
+  document.addEventListener('keydown', handleKeydown)
 })
 
 onUnmounted(() => {
   document.removeEventListener('click', handleClickOutside)
+  document.removeEventListener('keydown', handleKeydown)
 })
 </script>

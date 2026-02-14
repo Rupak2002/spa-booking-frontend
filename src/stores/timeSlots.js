@@ -35,7 +35,6 @@ export const useTimeSlotsStore = defineStore('timeSlots', () => {
       timeSlots.value = data || []
     } catch (err) {
       error.value = err.message
-      console.error('Error fetching time slots:', err)
     } finally {
       loading.value = false
     }
@@ -88,7 +87,6 @@ export const useTimeSlotsStore = defineStore('timeSlots', () => {
       return filteredSlots
     } catch (err) {
       error.value = err.message
-      console.error('Error fetching available slots:', err)
       return []
     } finally {
       loading.value = false
@@ -207,8 +205,7 @@ export const useTimeSlotsStore = defineStore('timeSlots', () => {
 
       if (countError) throw countError
       return { hasBookings: count > 0, count }
-    } catch (err) {
-      console.error('Error checking bookings:', err)
+    } catch {
       return { hasBookings: false, count: 0 }
     }
   }
@@ -277,8 +274,7 @@ export const useTimeSlotsStore = defineStore('timeSlots', () => {
       if (error) throw error
 
       return data.some(slot => timeRangesOverlap(startTime, endTime, slot.start_time, slot.end_time))
-    } catch (err) {
-      console.error('Error checking overlap:', err)
+    } catch {
       return false
     }
   }

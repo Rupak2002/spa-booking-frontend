@@ -12,13 +12,22 @@
         </button>
       </div>
 
+      <!-- Delete Error -->
+      <ErrorAlert v-if="deleteError" :message="deleteError" class="mb-4" />
+
       <!-- Services List -->
-      <div v-if="servicesStore.loading" class="text-center py-12">
-        <div class="text-gray-600">Loading services...</div>
+      <div v-if="servicesStore.loading" class="py-12">
+        <LoadingSpinner size="md" message="Loading services..." />
       </div>
 
-      <div v-else-if="servicesStore.services.length === 0" class="bg-white rounded-lg shadow p-12 text-center">
-        <p class="text-gray-600 mb-4">No services yet. Add your first service!</p>
+      <div v-else-if="servicesStore.services.length === 0" class="bg-white rounded-lg shadow">
+        <EmptyState
+          icon="inbox"
+          title="No services yet"
+          message="Get started by adding your first service."
+          action-label="Add Service"
+          @action="openCreateModal"
+        />
       </div>
 
       <div v-else class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -78,16 +87,14 @@
     <!-- Create/Edit Modal -->
     <div
       v-if="showModal"
-      class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50"
+      class="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50"
       @click.self="closeModal"
     >
       <div class="bg-white rounded-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto p-6">
         <h2 class="text-2xl font-bold mb-4">{{ editingService ? 'Edit Service' : 'Create Service' }}</h2>
 
         <form @submit.prevent="handleSubmit" class="space-y-4">
-          <div v-if="errorMessage" class="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded">
-            {{ errorMessage }}
-          </div>
+          <ErrorAlert v-if="errorMessage" :message="errorMessage" />
 
           <div>
             <label class="block text-sm font-medium text-gray-700 mb-1">Service Name *</label>
@@ -130,6 +137,7 @@
                 type="number"
                 step="0.01"
                 min="0"
+                max="9999.99"
                 required
                 class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
               />
@@ -141,6 +149,7 @@
                 v-model.number="formData.duration"
                 type="number"
                 min="15"
+                max="480"
                 step="15"
                 required
                 class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
@@ -203,12 +212,16 @@
 <script setup>
 import { ref, onMounted } from 'vue'
 import { useServicesStore } from '@/stores/services'
+import ErrorAlert from '@/components/ui/ErrorAlert.vue'
+import LoadingSpinner from '@/components/ui/LoadingSpinner.vue'
+import EmptyState from '@/components/ui/EmptyState.vue'
 
 const servicesStore = useServicesStore()
 
 const showModal = ref(false)
 const editingService = ref(null)
 const errorMessage = ref('')
+const deleteError = ref('')
 const uploading = ref(false)
 const selectedFile = ref(null)
 
@@ -309,10 +322,10 @@ const handleSubmit = async () => {
 
 const confirmDelete = async (service) => {
   if (confirm(`Are you sure you want to delete "${service.name}"?`)) {
+    deleteError.value = ''
     const result = await servicesStore.deleteService(service.id)
-    
     if (!result.success) {
-      alert(`Error: ${result.error}`)
+      deleteError.value = `Error deleting service: ${result.error}`
     }
   }
 }

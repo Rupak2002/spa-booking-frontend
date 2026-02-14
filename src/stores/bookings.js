@@ -68,7 +68,6 @@ export const useBookingsStore = defineStore('bookings', () => {
       return slots
     } catch (err) {
       error.value = err.message
-      console.error('Fetch slots error:', err)
       throw err
     } finally {
       loading.value = false
@@ -89,7 +88,6 @@ export const useBookingsStore = defineStore('bookings', () => {
       return response
     } catch (err) {
       error.value = err.message
-      console.error('Create reservation error:', err)
       throw err
     } finally {
       loading.value = false
@@ -118,7 +116,6 @@ export const useBookingsStore = defineStore('bookings', () => {
       return response
     } catch (err) {
       error.value = err.message
-      console.error('Confirm reservation error:', err)
       throw err
     } finally {
       loading.value = false
@@ -140,7 +137,6 @@ export const useBookingsStore = defineStore('bookings', () => {
       return bookings
     } catch (err) {
       error.value = err.message
-      console.error('Fetch my bookings error:', err)
       throw err
     } finally {
       loading.value = false
@@ -167,7 +163,6 @@ export const useBookingsStore = defineStore('bookings', () => {
       return response
     } catch (err) {
       error.value = err.message
-      console.error('Cancel booking error:', err)
       throw err
     } finally {
       loading.value = false

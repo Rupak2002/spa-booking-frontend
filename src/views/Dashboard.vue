@@ -71,41 +71,27 @@
         </div>
 
         <!-- Loading State -->
-        <div v-if="bookingsStore.loading" class="text-center py-12">
-          <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600 mx-auto"></div>
-          <p class="mt-4 text-gray-600">Loading your bookings...</p>
+        <div v-if="bookingsStore.loading" class="py-12">
+          <LoadingSpinner size="md" message="Loading your bookings..." />
         </div>
 
         <!-- Error State -->
-        <div v-else-if="bookingsStore.error" class="bg-red-50 border border-red-200 rounded-lg p-4">
-          <p class="text-red-800">{{ bookingsStore.error }}</p>
-          <button
-            @click="loadBookings"
-            class="mt-2 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700"
-          >
-            Try Again
-          </button>
-        </div>
+        <ErrorAlert
+          v-else-if="bookingsStore.error"
+          :message="bookingsStore.error"
+          :show-retry="true"
+          @retry="loadBookings"
+        />
 
         <!-- No Bookings (empty state) -->
-        <div v-else-if="filteredBookings.length === 0" class="text-center py-12">
-          <svg class="mx-auto h-24 w-24 text-gray-400 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-          </svg>
-          <h3 class="text-xl font-semibold text-gray-700 mb-2">
-            {{ activeFilter === 'all' ? 'No bookings yet' : `No ${activeFilter} bookings` }}
-          </h3>
-          <p class="text-gray-500 mb-4">
-            {{ activeFilter === 'all' ? 'Book your first service to get started' : 'Nothing to show here' }}
-          </p>
-          <router-link
-            v-if="activeFilter === 'all'"
-            to="/services"
-            class="inline-block px-6 py-3 bg-purple-600 text-white rounded-lg hover:bg-purple-700"
-          >
-            Browse Services
-          </router-link>
-        </div>
+        <EmptyState
+          v-else-if="filteredBookings.length === 0"
+          icon="calendar"
+          :title="activeFilter === 'all' ? 'No bookings yet' : `No ${activeFilter} bookings`"
+          :message="activeFilter === 'all' ? 'Book your first service to get started' : 'Nothing to show here'"
+          :action-label="activeFilter === 'all' ? 'Browse Services' : ''"
+          action-route="/services"
+        />
 
         <!-- Bookings List -->
         <div v-else class="space-y-4">
@@ -417,6 +403,9 @@ import { ref, computed, onMounted } from 'vue'
 import { useAuthStore } from '@/stores/auth'
 import { useBookingsStore } from '@/stores/bookings'
 import BookingDetailModal from '@/components/BookingDetailModal.vue'
+import LoadingSpinner from '@/components/ui/LoadingSpinner.vue'
+import ErrorAlert from '@/components/ui/ErrorAlert.vue'
+import EmptyState from '@/components/ui/EmptyState.vue'
 import { formatDate, formatTime, getStatusClass } from '@/lib/dateUtils'
 
 const authStore = useAuthStore()

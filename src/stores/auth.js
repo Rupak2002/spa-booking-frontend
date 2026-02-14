@@ -18,7 +18,7 @@ export const useAuthStore = defineStore('auth', () => {
   const isTherapist = computed(() => profile.value?.role === 'therapist')
 
   // Actions
-  async function signUp(email, password, fullName) {
+  async function signUp(email, password, fullName, phone = '') {
     loading.value = true
     error.value = null
 
@@ -29,6 +29,7 @@ export const useAuthStore = defineStore('auth', () => {
         options: {
           data: {
             full_name: fullName,
+            phone: phone || null,
             role: 'customer'
           },
           emailRedirectTo: `${window.location.origin}/auth/callback`
@@ -54,7 +55,6 @@ export const useAuthStore = defineStore('auth', () => {
 
       return { success: true, needsConfirmation: false }
     } catch (err) {
-      console.error('Signup error:', err)
       error.value = err.message
       return { success: false, error: err.message }
     } finally {
@@ -160,7 +160,6 @@ export const useAuthStore = defineStore('auth', () => {
 
       profile.value = data
     } catch (err) {
-      console.error('Error fetching profile:', err)
       error.value = err.message
     }
   }
@@ -183,8 +182,7 @@ export const useAuthStore = defineStore('auth', () => {
       }
 
       // Listen for auth changes and store unsubscribe function
-      const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
-        console.log('Auth state changed:', event)
+      const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, session) => {
 
         user.value = session?.user || null
 
@@ -196,8 +194,7 @@ export const useAuthStore = defineStore('auth', () => {
       })
 
       authListenerUnsubscribe = () => subscription.unsubscribe()
-    } catch (err) {
-      console.error('Auth initialization error:', err)
+    } catch {
     } finally {
       loading.value = false
     }

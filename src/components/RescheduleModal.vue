@@ -5,15 +5,24 @@
   >
     <div class="absolute inset-0 bg-black/40" @click="close"></div>
     
-    <div class="relative bg-white rounded-xl shadow-xl w-full max-w-2xl mx-4 max-h-[90vh] overflow-y-auto">
+    <div
+      ref="dialogRef"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="reschedule-modal-title"
+      tabindex="-1"
+      class="relative bg-white rounded-xl shadow-xl w-full max-w-2xl mx-4 max-h-[90vh] overflow-y-auto focus:outline-none"
+      @keydown.escape="close"
+    >
       <!-- Header -->
       <div class="sticky top-0 bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between">
-        <h3 class="text-lg font-bold text-gray-900">Reschedule Booking</h3>
+        <h3 id="reschedule-modal-title" class="text-lg font-bold text-gray-900">Reschedule Booking</h3>
         <button
           @click="close"
+          aria-label="Close"
           class="text-gray-400 hover:text-gray-600"
         >
-          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
           </svg>
         </button>
@@ -35,7 +44,7 @@
             </div>
             <div>
               <span class="text-gray-500">Therapist:</span>
-              <p class="font-medium">{{ booking.therapist.user.full_name }}</p>
+              <p class="font-medium">{{ booking.therapist?.user?.full_name || 'Unknown' }}</p>
             </div>
             <div>
               <span class="text-gray-500">Duration:</span>
@@ -71,16 +80,17 @@
           </label>
 
           <!-- Loading -->
-          <div v-if="loadingSlots" class="text-center py-8">
-            <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-600 mx-auto"></div>
-            <p class="mt-2 text-sm text-gray-600">Loading available slots...</p>
+          <div v-if="loadingSlots" class="py-8">
+            <LoadingSpinner size="sm" message="Loading available slots..." />
           </div>
 
           <!-- No slots -->
-          <div v-else-if="availableSlots.length === 0" class="text-center py-8 bg-gray-50 rounded-lg">
-            <p class="text-gray-600">No available slots on this date</p>
-            <p class="text-sm text-gray-500 mt-1">Try a different date</p>
-          </div>
+          <EmptyState
+            v-else-if="availableSlots.length === 0"
+            icon="clock"
+            title="No Available Slots"
+            message="No available slots on this date. Try a different date."
+          />
 
           <!-- Slots list -->
           <div v-else class="space-y-2 max-h-64 overflow-y-auto border border-gray-200 rounded-lg p-3">
@@ -119,7 +129,7 @@
         <!-- Comparison (if slot selected) -->
         <div v-if="selectedSlotId" class="bg-blue-50 border border-blue-200 rounded-lg p-4">
           <h4 class="font-semibold text-blue-900 mb-2 flex items-center gap-2">
-            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
             </svg>
             Reschedule Summary
@@ -139,9 +149,7 @@
         </div>
 
         <!-- Error Message -->
-        <div v-if="error" class="bg-red-50 border border-red-200 rounded-lg p-4">
-          <p class="text-sm text-red-800">{{ error }}</p>
-        </div>
+        <ErrorAlert v-if="error" :message="error" />
       </div>
 
       <!-- Footer Actions -->
@@ -165,10 +173,13 @@
 </template>
 
 <script setup>
-import { ref, computed, watch } from 'vue'
+import { ref, computed, watch, onMounted } from 'vue'
 import { bookingAPI } from '@/lib/api'
 import { supabase } from '@/lib/supabase'
 import { formatDate, formatTime } from '@/lib/dateUtils'
+import LoadingSpinner from '@/components/ui/LoadingSpinner.vue'
+import ErrorAlert from '@/components/ui/ErrorAlert.vue'
+import EmptyState from '@/components/ui/EmptyState.vue'
 
 const props = defineProps({
   isOpen: {
@@ -190,6 +201,10 @@ const availableSlots = ref([])
 const loadingSlots = ref(false)
 const rescheduling = ref(false)
 const error = ref(null)
+const dialogRef = ref(null)
+onMounted(() => {
+  dialogRef.value?.focus()
+})
 
 // Computed
 const minDate = computed(() => {

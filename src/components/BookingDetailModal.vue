@@ -10,12 +10,20 @@
     ></div>
 
     <!-- Modal -->
-    <div class="relative bg-white rounded-xl shadow-xl w-full max-w-md mx-4 max-h-[90vh] overflow-hidden flex flex-col">
+    <div
+      ref="dialogRef"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="booking-modal-title"
+      tabindex="-1"
+      class="relative bg-white rounded-xl shadow-xl w-full max-w-md mx-4 max-h-[90vh] overflow-hidden flex flex-col focus:outline-none"
+      @keydown.escape="close"
+    >
 
       <!-- Header -->
       <div class="flex items-start justify-between p-4 sm:p-6 pb-4 flex-shrink-0">
         <div>
-          <h2 class="text-lg sm:text-xl font-bold text-gray-900">{{ booking.service_name }}</h2>
+          <h2 id="booking-modal-title" class="text-lg sm:text-xl font-bold text-gray-900">{{ booking.service_name }}</h2>
           <span
             class="inline-block mt-1 px-2 py-1 rounded-full text-xs font-semibold"
             :class="statusClass"
@@ -25,9 +33,10 @@
         </div>
         <button
           @click="close"
+          aria-label="Close"
           class="min-w-[44px] min-h-[44px] flex items-center justify-center text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg transition-colors -mr-2 -mt-2"
         >
-          <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
           </svg>
         </button>
@@ -41,7 +50,7 @@
           <!-- Reserved -->
           <div class="flex flex-col items-center">
             <div :class="timelineNodeClass('reserved')">
-              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7" />
               </svg>
             </div>
@@ -54,7 +63,7 @@
           <!-- Confirmed -->
           <div class="flex flex-col items-center">
             <div :class="timelineNodeClass('confirmed')">
-              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7" />
               </svg>
             </div>
@@ -67,7 +76,7 @@
           <!-- Completed -->
           <div class="flex flex-col items-center">
             <div :class="timelineNodeClass('completed')">
-              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7" />
               </svg>
             </div>
@@ -80,7 +89,7 @@
         <div class="p-4 sm:p-6 space-y-3">
         <!-- Therapist -->
         <div class="flex items-center text-sm text-gray-700">
-          <svg class="w-4 h-4 mr-3 text-gray-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <svg class="w-4 h-4 mr-3 text-gray-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
           </svg>
           <span class="text-gray-500 w-20 flex-shrink-0">Therapist</span>
@@ -89,7 +98,7 @@
 
         <!-- Date -->
         <div class="flex items-center text-sm text-gray-700">
-          <svg class="w-4 h-4 mr-3 text-gray-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <svg class="w-4 h-4 mr-3 text-gray-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
           </svg>
           <span class="text-gray-500 w-20 flex-shrink-0">Date</span>
@@ -98,7 +107,7 @@
 
         <!-- Time -->
         <div class="flex items-center text-sm text-gray-700">
-          <svg class="w-4 h-4 mr-3 text-gray-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <svg class="w-4 h-4 mr-3 text-gray-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
           </svg>
           <span class="text-gray-500 w-20 flex-shrink-0">Time</span>
@@ -107,7 +116,7 @@
 
         <!-- Duration -->
         <div class="flex items-center text-sm text-gray-700">
-          <svg class="w-4 h-4 mr-3 text-gray-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <svg class="w-4 h-4 mr-3 text-gray-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
           </svg>
           <span class="text-gray-500 w-20 flex-shrink-0">Duration</span>
@@ -116,7 +125,7 @@
 
         <!-- Price -->
         <div class="flex items-center text-sm text-gray-700">
-          <svg class="w-4 h-4 mr-3 text-gray-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <svg class="w-4 h-4 mr-3 text-gray-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
           </svg>
           <span class="text-gray-500 w-20 flex-shrink-0">Price</span>
@@ -125,7 +134,7 @@
 
         <!-- Notes (only if present) -->
         <div v-if="booking.notes" class="flex items-start text-sm text-gray-700 pt-1">
-          <svg class="w-4 h-4 mr-3 text-gray-400 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <svg class="w-4 h-4 mr-3 text-gray-400 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
           </svg>
           <span class="text-gray-500 w-20 flex-shrink-0">Notes</span>
@@ -219,7 +228,7 @@
 </template>
 
 <script setup>
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { useBookingsStore } from '@/stores/bookings'
 import { formatDate, formatTime, getStatusClass } from '@/lib/dateUtils'
 
@@ -245,6 +254,10 @@ const bookingsStore = useBookingsStore()
 const activeAction = ref(null) // null | 'confirm' | 'cancel'
 const confirming = ref(false)
 const cancelling = ref(false)
+const dialogRef = ref(null)
+onMounted(() => {
+  dialogRef.value?.focus()
+})
 
 // Computed
 const isCancellable = computed(() => {

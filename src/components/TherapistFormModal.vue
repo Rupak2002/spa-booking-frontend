@@ -1,13 +1,21 @@
 <template>
-  <div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50" @click.self="$emit('close')">
-    <div class="bg-white rounded-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+  <div class="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50" @click.self="$emit('close')">
+    <div
+      ref="dialogRef"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="therapist-modal-title"
+      tabindex="-1"
+      class="bg-white rounded-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto focus:outline-none"
+      @keydown.escape="$emit('close')"
+    >
       <!-- Header -->
       <div class="sticky top-0 bg-white border-b border-gray-200 px-6 py-4 flex justify-between items-center">
-        <h2 class="text-2xl font-bold text-gray-800">
+        <h2 id="therapist-modal-title" class="text-2xl font-bold text-gray-800">
           {{ isEditMode ? 'Edit Therapist' : 'Create New Therapist' }}
         </h2>
-        <button @click="$emit('close')" class="text-gray-500 hover:text-gray-700">
-          <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <button @click="$emit('close')" aria-label="Close" class="text-gray-500 hover:text-gray-700">
+          <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
           </svg>
         </button>
@@ -96,9 +104,7 @@
         </div>
 
         <!-- Error Message -->
-        <div v-if="error" class="mb-6 bg-red-50 border border-red-200 rounded-lg p-4">
-          <p class="text-red-800 text-sm">{{ error }}</p>
-        </div>
+        <ErrorAlert v-if="error" :message="error" class="mb-6" />
 
         <!-- Actions -->
         <div class="flex gap-4">
@@ -126,6 +132,7 @@
 import { ref, computed, onMounted, watch } from 'vue'
 import { useTherapistsStore } from '../stores/therapists'
 import { supabase } from '../lib/supabase'
+import ErrorAlert from '@/components/ui/ErrorAlert.vue'
 
 const props = defineProps({
   therapist: {
@@ -148,6 +155,10 @@ const formData = ref({
 const availableUsers = ref([])
 const loading = ref(false)
 const error = ref(null)
+const dialogRef = ref(null)
+onMounted(() => {
+  dialogRef.value?.focus()
+})
 
 const isEditMode = computed(() => !!props.therapist)
 
@@ -167,16 +178,14 @@ watch(() => props.therapist, (newTherapist) => {
 const fetchAvailableUsers = async () => {
   try {
     // Get all profiles with therapist role
-    const { data: therapistProfiles, error: profilesError } = await supabase
+    const { data: therapistProfiles, error: fetchError } = await supabase
       .from('profiles')
       .select('id, email, full_name, role')
       .eq('role', 'therapist')
 
-    console.log('Therapist profiles found:', therapistProfiles)
-    console.log('Profiles error:', profilesError)
+    if (fetchError) throw fetchError
 
     if (!therapistProfiles || therapistProfiles.length === 0) {
-      console.log('No therapist profiles found')
       availableUsers.value = []
       return
     }
@@ -186,18 +195,13 @@ const fetchAvailableUsers = async () => {
       .from('therapists')
       .select('user_id')
 
-    console.log('Existing therapists:', existingTherapists)
-
     const existingUserIds = existingTherapists?.map(t => t.user_id) || []
-    console.log('Existing user IDs:', existingUserIds)
 
     // Filter out users who already have therapist profiles
     availableUsers.value = therapistProfiles.filter(
       profile => !existingUserIds.includes(profile.id)
     )
-    console.log('Available users after filter:', availableUsers.value)
   } catch (err) {
-    console.error('Error fetching users:', err)
     error.value = 'Failed to load available users'
   }
 }

@@ -1,11 +1,19 @@
 <template>
-  <div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50" @click.self="$emit('close')">
-    <div class="bg-white rounded-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+  <div class="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50" @click.self="$emit('close')">
+    <div
+      ref="dialogRef"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="bulk-create-modal-title"
+      tabindex="-1"
+      class="bg-white rounded-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto focus:outline-none"
+      @keydown.escape="$emit('close')"
+    >
       <!-- Header -->
       <div class="sticky top-0 bg-white border-b border-gray-200 px-6 py-4 flex justify-between items-center">
-        <h2 class="text-2xl font-bold text-gray-800">Bulk Create Time Slots</h2>
-        <button @click="$emit('close')" class="text-gray-500 hover:text-gray-700">
-          <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <h2 id="bulk-create-modal-title" class="text-2xl font-bold text-gray-800">Bulk Create Time Slots</h2>
+        <button @click="$emit('close')" aria-label="Close" class="text-gray-500 hover:text-gray-700">
+          <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
           </svg>
         </button>
@@ -151,9 +159,7 @@
         </div>
 
         <!-- Error Message -->
-        <div v-if="error" class="mb-6 bg-red-50 border border-red-200 rounded-lg p-4">
-          <p class="text-red-800 text-sm">{{ error }}</p>
-        </div>
+        <ErrorAlert v-if="error" :message="error" class="mb-6" />
 
         <!-- Success Message -->
         <div v-if="successCount > 0" class="mb-6 bg-green-50 border border-green-200 rounded-lg p-4">
@@ -185,8 +191,9 @@
 </template>
 
 <script setup>
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { useTimeSlotsStore } from '../stores/timeSlots'
+import ErrorAlert from '@/components/ui/ErrorAlert.vue'
 
 const props = defineProps({
   therapistId: {
@@ -224,6 +231,10 @@ const daysOfWeek = [
 const loading = ref(false)
 const error = ref(null)
 const successCount = ref(0)
+const dialogRef = ref(null)
+onMounted(() => {
+  dialogRef.value?.focus()
+})
 
 const today = computed(() => new Date().toISOString().split('T')[0])
 

@@ -9,14 +9,18 @@ import { supabase } from './supabase'
  */
 
 // Base URL from environment variable
-const API_BASE_URL = import.meta.env.VITE_BACKEND_URL || 'http://localhost:3000'
+const API_BASE_URL = import.meta.env.VITE_BACKEND_URL
+if (!API_BASE_URL) {
+  console.warn('[api] VITE_BACKEND_URL is not set. Falling back to http://localhost:3000')
+}
 
 // Create axios instance with default config
 const apiClient = axios.create({
-  baseURL: `${API_BASE_URL}/api`,
+  baseURL: `${API_BASE_URL || 'http://localhost:3000'}/api`,
   headers: {
     'Content-Type': 'application/json'
-  }
+  },
+  timeout: 30000 // 30 second timeout
 })
 
 // Session cache to avoid calling getSession() on every request
@@ -112,6 +116,14 @@ export const bookingAPI = {
    */
   async confirmReservation(bookingId) {
     return await apiClient.post(`/bookings/${bookingId}/confirm`)
+  },
+
+  /**
+   * Get a single booking by ID
+   */
+  async getBookingById(bookingId) {
+    const data = await apiClient.get(`/bookings/${bookingId}`)
+    return data.data
   },
 
   /**

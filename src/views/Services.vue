@@ -67,21 +67,17 @@
       </div>
 
       <!-- Loading State -->
-      <div v-if="servicesStore.loading" class="text-center py-12">
-        <div class="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600"></div>
-        <p class="mt-4 text-gray-600">Loading services...</p>
+      <div v-if="servicesStore.loading" class="py-12">
+        <LoadingSpinner size="md" message="Loading services..." />
       </div>
 
       <!-- Error State -->
-      <div v-else-if="servicesStore.error" class="bg-red-50 border border-red-200 rounded-lg p-6 text-center">
-        <svg class="mx-auto h-12 w-12 text-red-400 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-        </svg>
-        <p class="text-red-800">{{ servicesStore.error }}</p>
-        <button @click="loadServices" class="mt-4 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700">
-          Try Again
-        </button>
-      </div>
+      <ErrorAlert
+        v-else-if="servicesStore.error"
+        :message="servicesStore.error"
+        :show-retry="true"
+        @retry="loadServices"
+      />
 
       <!-- No Results -->
       <div v-else-if="filteredServices.length === 0" class="text-center py-12">
@@ -112,6 +108,12 @@
       </div>
     </div>
 
+    <!-- Role Error Banner -->
+    <div v-if="roleError" class="fixed bottom-4 left-1/2 -translate-x-1/2 z-50 bg-red-100 border border-red-300 text-red-800 px-6 py-3 rounded-lg shadow-lg flex items-center gap-3">
+      <span>{{ roleError }}</span>
+      <button @click="roleError = ''" class="ml-2 text-red-600 hover:text-red-800 font-bold">&times;</button>
+    </div>
+
     <!-- Service Details Modal -->
     <ServiceDetailsModal
       v-if="selectedService"
@@ -129,6 +131,8 @@ import { useServicesStore } from '@/stores/services'
 import { useAuthStore } from '@/stores/auth'
 import ServiceCard from '@/components/ServiceCard.vue'
 import ServiceDetailsModal from '@/components/ServiceDetailsModal.vue'
+import LoadingSpinner from '@/components/ui/LoadingSpinner.vue'
+import ErrorAlert from '@/components/ui/ErrorAlert.vue'
 
 const router = useRouter()
 const servicesStore = useServicesStore()
@@ -137,6 +141,7 @@ const authStore = useAuthStore()
 const searchQuery = ref('')
 const selectedCategory = ref('')
 const selectedService = ref(null)
+const roleError = ref('')
 
 // Use categories from the store
 const categories = computed(() => servicesStore.categories)
@@ -188,7 +193,7 @@ const handleBooking = (service) => {
 
   // Check if user is a customer
   if (authStore.profile?.role !== 'customer') {
-    alert('Only customers can book services. Please contact an administrator to change your role.')
+    roleError.value = 'Only customers can book services. Please contact an administrator to change your role.'
     return
   }
 

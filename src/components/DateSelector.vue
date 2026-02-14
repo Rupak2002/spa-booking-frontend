@@ -2,9 +2,12 @@
   <div class="date-selector">
     <h3 class="text-lg font-semibold mb-4">Select a Date</h3>
 
-    <div v-if="availableDates.length === 0" class="text-center py-8 text-gray-600">
-      <p>No dates available. Please select a therapist first.</p>
-    </div>
+    <EmptyState
+      v-if="availableDates.length === 0"
+      icon="calendar"
+      title="No Dates Available"
+      message="Please select a therapist first."
+    />
 
     <div v-else class="grid grid-cols-2 md:grid-cols-4 gap-3">
       <button
@@ -28,6 +31,8 @@
 </template>
 
 <script setup>
+import EmptyState from '@/components/ui/EmptyState.vue'
+
 const props = defineProps({
   availableDates: {
     type: Array,

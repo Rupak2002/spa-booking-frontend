@@ -2,9 +2,12 @@
   <div class="time-slot-selector">
     <h3 class="text-lg font-semibold mb-4">Select a Time</h3>
 
-    <div v-if="timeSlots.length === 0" class="text-center py-8 text-gray-600">
-      <p>No time slots available for this date.</p>
-    </div>
+    <EmptyState
+      v-if="timeSlots.length === 0"
+      icon="clock"
+      title="No Time Slots Available"
+      message="No time slots available for this date."
+    />
 
     <div v-else class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
       <button
@@ -28,6 +31,8 @@
 </template>
 
 <script setup>
+import EmptyState from '@/components/ui/EmptyState.vue'
+
 const props = defineProps({
   timeSlots: {
     type: Array,

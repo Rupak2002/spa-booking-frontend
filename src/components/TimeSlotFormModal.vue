@@ -1,13 +1,21 @@
 <template>
-  <div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50" @click.self="$emit('close')">
-    <div class="bg-white rounded-lg max-w-md w-full max-h-[90vh] overflow-y-auto">
+  <div class="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50" @click.self="$emit('close')">
+    <div
+      ref="dialogRef"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="timeslot-modal-title"
+      tabindex="-1"
+      class="bg-white rounded-lg max-w-md w-full max-h-[90vh] overflow-y-auto focus:outline-none"
+      @keydown.escape="$emit('close')"
+    >
       <!-- Header -->
       <div class="sticky top-0 bg-white border-b border-gray-200 px-6 py-4 flex justify-between items-center">
-        <h2 class="text-2xl font-bold text-gray-800">
+        <h2 id="timeslot-modal-title" class="text-2xl font-bold text-gray-800">
           {{ isEditMode ? 'Edit Time Slot' : 'Create Time Slot' }}
         </h2>
-        <button @click="$emit('close')" class="text-gray-500 hover:text-gray-700">
-          <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <button @click="$emit('close')" aria-label="Close" class="text-gray-500 hover:text-gray-700">
+          <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
           </svg>
         </button>
@@ -116,9 +124,7 @@
         </div>
 
         <!-- Error Message -->
-        <div v-if="error" class="mb-6 bg-red-50 border border-red-200 rounded-lg p-4">
-          <p class="text-red-800 text-sm">{{ error }}</p>
-        </div>
+        <ErrorAlert v-if="error" :message="error" class="mb-6" />
 
         <!-- Actions -->
         <div class="flex gap-4">
@@ -143,8 +149,9 @@
 </template>
 
 <script setup>
-import { ref, computed, watch } from 'vue'
+import { ref, computed, watch, onMounted } from 'vue'
 import { useTimeSlotsStore } from '../stores/timeSlots'
+import ErrorAlert from '@/components/ui/ErrorAlert.vue'
 
 const props = defineProps({
   slot: {
@@ -174,6 +181,10 @@ const formData = ref({
 
 const loading = ref(false)
 const error = ref(null)
+const dialogRef = ref(null)
+onMounted(() => {
+  dialogRef.value?.focus()
+})
 
 const isEditMode = computed(() => !!props.slot)
 

@@ -48,7 +48,6 @@ export const useTherapistsStore = defineStore('therapists', () => {
 
       return { success: true }
     } catch (err) {
-      console.error('Error fetching therapists:', err)
       error.value = err.message
       return { success: false, error: err.message }
     } finally {
@@ -76,7 +75,6 @@ export const useTherapistsStore = defineStore('therapists', () => {
       therapists.value.unshift(data)
       return { success: true, data }
     } catch (err) {
-      console.error('Error creating therapist:', err)
       error.value = err.message
       return { success: false, error: err.message }
     } finally {
@@ -109,7 +107,6 @@ export const useTherapistsStore = defineStore('therapists', () => {
 
       return { success: true, data }
     } catch (err) {
-      console.error('Error updating therapist:', err)
       error.value = err.message
       return { success: false, error: err.message }
     } finally {
@@ -132,8 +129,7 @@ export const useTherapistsStore = defineStore('therapists', () => {
       if (fetchError) throw fetchError
 
       return data
-    } catch (err) {
-      console.error('Error fetching therapist profile:', err)
+    } catch {
       return null
     }
   }
@@ -159,7 +155,6 @@ export const useTherapistsStore = defineStore('therapists', () => {
       therapists.value = therapists.value.filter(t => t.id !== id)
       return { success: true }
     } catch (err) {
-      console.error('Error deleting therapist:', err)
       error.value = err.message
       return { success: false, error: err.message }
     } finally {

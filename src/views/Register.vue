@@ -12,9 +12,7 @@
           <p class="text-sm mt-1">Please check your email inbox (and spam folder) for the confirmation link.</p>
         </div>
 
-        <div v-if="errorMessage" class="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded">
-          {{ errorMessage }}
-        </div>
+        <ErrorAlert v-if="errorMessage" :message="errorMessage" />
 
         <div v-if="!successMessage" class="space-y-4">
           <div>
@@ -24,8 +22,12 @@
               v-model="fullName"
               type="text"
               required
-              class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+              autocomplete="name"
+              @blur="touch('fullName')"
+              class="mt-1 block w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+              :class="fieldErrors.fullName ? 'border-red-400' : 'border-gray-300'"
             />
+            <p v-if="fieldErrors.fullName" class="mt-1 text-sm text-red-600">{{ fieldErrors.fullName }}</p>
           </div>
 
           <div>
@@ -35,8 +37,28 @@
               v-model="email"
               type="email"
               required
-              class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+              autocomplete="email"
+              @blur="touch('email')"
+              class="mt-1 block w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+              :class="fieldErrors.email ? 'border-red-400' : 'border-gray-300'"
             />
+            <p v-if="fieldErrors.email" class="mt-1 text-sm text-red-600">{{ fieldErrors.email }}</p>
+          </div>
+
+          <div>
+            <label for="phone" class="block text-sm font-medium text-gray-700">Phone Number</label>
+            <input
+              id="phone"
+              v-model="phone"
+              type="tel"
+              required
+              autocomplete="tel"
+              placeholder="+1 (555) 000-0000"
+              @blur="touch('phone')"
+              class="mt-1 block w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+              :class="fieldErrors.phone ? 'border-red-400' : 'border-gray-300'"
+            />
+            <p v-if="fieldErrors.phone" class="mt-1 text-sm text-red-600">{{ fieldErrors.phone }}</p>
           </div>
 
           <div>
@@ -47,9 +69,13 @@
               type="password"
               required
               minlength="6"
-              class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+              autocomplete="new-password"
+              @blur="touch('password')"
+              class="mt-1 block w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+              :class="fieldErrors.password ? 'border-red-400' : 'border-gray-300'"
             />
-            <p class="mt-1 text-sm text-gray-500">Minimum 6 characters</p>
+            <p v-if="fieldErrors.password" class="mt-1 text-sm text-red-600">{{ fieldErrors.password }}</p>
+            <p v-else class="mt-1 text-sm text-gray-500">Minimum 6 characters</p>
           </div>
 
           <button
@@ -106,15 +132,57 @@
 import { ref } from 'vue'
 import { useAuthStore } from '@/stores/auth'
 import { useRouter } from 'vue-router'
+import ErrorAlert from '@/components/ui/ErrorAlert.vue'
+import { isValidEmail, isValidPhone, isNotEmpty } from '@/utils/validators'
 
 const authStore = useAuthStore()
 const router = useRouter()
 
 const fullName = ref('')
 const email = ref('')
+const phone = ref('')
 const password = ref('')
 const errorMessage = ref('')
 const successMessage = ref('')
+const fieldErrors = ref({ fullName: '', email: '', phone: '', password: '' })
+
+function validateField(field) {
+  switch (field) {
+    case 'fullName':
+      fieldErrors.value.fullName = !isNotEmpty(fullName.value) ? 'Full name is required.' : ''
+      break
+    case 'email':
+      fieldErrors.value.email = !isNotEmpty(email.value)
+        ? 'Email is required.'
+        : !isValidEmail(email.value)
+        ? 'Please enter a valid email address.'
+        : ''
+      break
+    case 'phone':
+      fieldErrors.value.phone = !isNotEmpty(phone.value)
+        ? 'Phone number is required.'
+        : !isValidPhone(phone.value)
+        ? 'Please enter a valid phone number.'
+        : ''
+      break
+    case 'password':
+      fieldErrors.value.password = !isNotEmpty(password.value)
+        ? 'Password is required.'
+        : password.value.length < 6
+        ? 'Password must be at least 6 characters.'
+        : ''
+      break
+  }
+}
+
+function touch(field) {
+  validateField(field)
+}
+
+function validateAll() {
+  ;['fullName', 'email', 'phone', 'password'].forEach(validateField)
+  return Object.values(fieldErrors.value).every(e => e === '')
+}
 
 const handleGoogleSignIn = async () => {
   errorMessage.value = ''
@@ -127,15 +195,15 @@ const handleGoogleSignIn = async () => {
 const handleRegister = async () => {
   errorMessage.value = ''
   successMessage.value = ''
-  
-  const result = await authStore.signUp(email.value, password.value, fullName.value)
-  
+
+  if (!validateAll()) return
+
+  const result = await authStore.signUp(email.value, password.value, fullName.value, phone.value)
+
   if (result.success) {
-    // Check if email confirmation is required
     if (result.needsConfirmation) {
       successMessage.value = 'Account created successfully! Please check your email to confirm your account.'
     } else {
-      // Auto-login is enabled, redirect to dashboard
       router.push('/dashboard')
     }
   } else {

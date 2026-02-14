@@ -25,7 +25,6 @@ export const useServicesStore = defineStore('services', () => {
       categories.value = data
     } catch (err) {
       error.value = err.message
-      console.error('Error fetching categories:', err)
     } finally {
       loading.value = false
     }
@@ -49,7 +48,6 @@ export const useServicesStore = defineStore('services', () => {
       services.value = data
     } catch (err) {
       error.value = err.message
-      console.error('Error fetching services:', err)
     } finally {
       loading.value = false
     }
@@ -79,7 +77,6 @@ export const useServicesStore = defineStore('services', () => {
       return services.value
     } catch (err) {
       error.value = err.message
-      console.error('Error fetching active services:', err)
       return []
     } finally {
       loading.value = false

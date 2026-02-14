@@ -82,7 +82,11 @@ router.beforeEach(async (to, from, next) => {
   const authStore = useAuthStore()
 
   if (!isInitialized) {
-    await authStore.initialize()
+    try {
+      await authStore.initialize()
+    } catch {
+      // Auth init failed (e.g. Supabase unreachable) — continue as unauthenticated
+    }
     isInitialized = true
   }
 

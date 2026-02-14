@@ -153,35 +153,80 @@
       <!-- LIST VIEW -->
       <div v-if="viewMode === 'list'">
         <!-- Loading State -->
-        <div v-if="loading" class="p-12 text-center">
-          <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600 mx-auto"></div>
-          <p class="mt-4 text-gray-600">Loading bookings...</p>
+        <div v-if="loading" class="p-12">
+          <LoadingSpinner size="md" message="Loading bookings..." />
         </div>
 
         <!-- Error State -->
         <div v-else-if="error" class="p-6">
-          <div class="bg-red-50 border border-red-200 rounded-lg p-4">
-            <p class="text-red-800">{{ error }}</p>
-            <button
-              @click="loadBookings"
-              class="mt-2 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700"
-            >
-              Try Again
-            </button>
-          </div>
+          <ErrorAlert :message="error" :show-retry="true" @retry="loadBookings" />
         </div>
 
         <!-- Empty State -->
-        <div v-else-if="filteredBookings.length === 0" class="p-12 text-center">
-          <svg class="mx-auto h-24 w-24 text-gray-400 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
-          </svg>
-          <h3 class="text-xl font-semibold text-gray-700 mb-2">No bookings found</h3>
-          <p class="text-gray-500">Try adjusting your filters</p>
+        <EmptyState
+          v-else-if="filteredBookings.length === 0"
+          icon="search"
+          title="No bookings found"
+          message="Try adjusting your filters"
+        />
+
+        <!-- Bookings: Mobile + Desktop views -->
+        <template v-else>
+        <div class="md:hidden divide-y divide-gray-200">
+          <div
+            v-for="booking in filteredBookings"
+            :key="booking.id"
+            class="p-4 space-y-3"
+          >
+            <div class="flex items-start justify-between gap-2">
+              <div>
+                <p class="text-sm font-semibold text-gray-900">{{ booking.service_name }}</p>
+                <p class="text-sm text-gray-500">{{ booking.service_duration }} min · ${{ booking.service_price }}</p>
+              </div>
+              <span
+                class="shrink-0 px-2 py-1 rounded-full text-xs font-semibold"
+                :class="getStatusClass(booking.status)"
+              >
+                {{ booking.status.toUpperCase() }}
+              </span>
+            </div>
+            <div class="grid grid-cols-2 gap-x-4 gap-y-1 text-sm">
+              <div>
+                <span class="text-gray-500">Date</span>
+                <p class="font-medium text-gray-900">{{ formatDate(booking.booking_date) }}</p>
+              </div>
+              <div>
+                <span class="text-gray-500">Time</span>
+                <p class="font-medium text-gray-900">{{ formatTime(booking.start_time) }}</p>
+              </div>
+              <div>
+                <span class="text-gray-500">Customer</span>
+                <p class="font-medium text-gray-900">{{ booking.customer?.full_name || 'Unknown' }}</p>
+              </div>
+              <div>
+                <span class="text-gray-500">Therapist</span>
+                <p class="font-medium text-gray-900">{{ booking.therapist?.user?.full_name || 'Unknown' }}</p>
+              </div>
+            </div>
+            <div v-if="['pending', 'confirmed'].includes(booking.status)" class="flex gap-2 pt-1">
+              <button
+                @click="openRescheduleModal(booking)"
+                class="flex-1 px-3 py-2 text-sm text-purple-600 border border-purple-300 rounded-lg hover:bg-purple-50 font-medium transition-colors"
+              >
+                Reschedule
+              </button>
+              <button
+                @click="confirmCancel(booking)"
+                class="flex-1 px-3 py-2 text-sm text-red-600 border border-red-300 rounded-lg hover:bg-red-50 font-medium transition-colors"
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
         </div>
 
-        <!-- Bookings Table -->
-        <div v-else class="overflow-x-auto">
+        <!-- Bookings: Desktop table -->
+        <div class="hidden md:block overflow-x-auto">
           <table class="w-full">
             <thead class="bg-gray-50 border-b border-gray-200">
               <tr>
@@ -201,40 +246,23 @@
                 class="hover:bg-gray-50"
               >
                 <td class="px-6 py-4 whitespace-nowrap">
-                  <div class="text-sm font-medium text-gray-900">
-                    {{ formatDate(booking.booking_date) }}
-                  </div>
-                  <div class="text-sm text-gray-500">
-                    {{ formatTime(booking.start_time) }}
-                  </div>
+                  <div class="text-sm font-medium text-gray-900">{{ formatDate(booking.booking_date) }}</div>
+                  <div class="text-sm text-gray-500">{{ formatTime(booking.start_time) }}</div>
                 </td>
-
                 <td class="px-6 py-4">
-                  <div class="text-sm font-medium text-gray-900">
-                    {{ booking.customer.full_name }}
-                  </div>
-                  <div class="text-sm text-gray-500">
-                    {{ booking.customer.email }}
-                  </div>
+                  <div class="text-sm font-medium text-gray-900">{{ booking.customer?.full_name || 'Unknown' }}</div>
+                  <div class="text-sm text-gray-500">{{ booking.customer?.email || '—' }}</div>
                 </td>
-
                 <td class="px-6 py-4">
                   <div class="text-sm text-gray-900">{{ booking.service_name }}</div>
                   <div class="text-sm text-gray-500">{{ booking.service_duration }} min</div>
                 </td>
-
                 <td class="px-6 py-4">
-                  <div class="text-sm text-gray-900">
-                    {{ booking.therapist.user.full_name }}
-                  </div>
+                  <div class="text-sm text-gray-900">{{ booking.therapist?.user?.full_name || 'Unknown' }}</div>
                 </td>
-
                 <td class="px-6 py-4 whitespace-nowrap">
-                  <div class="text-sm font-medium text-gray-900">
-                    ${{ booking.service_price }}
-                  </div>
+                  <div class="text-sm font-medium text-gray-900">${{ booking.service_price }}</div>
                 </td>
-
                 <td class="px-6 py-4 whitespace-nowrap">
                   <span
                     class="px-2 py-1 rounded-full text-xs font-semibold"
@@ -243,18 +271,17 @@
                     {{ booking.status.toUpperCase() }}
                   </span>
                 </td>
-
-                <td class="px-4 sm:px-6 py-4 whitespace-nowrap text-sm">
-                  <div v-if="['pending', 'confirmed'].includes(booking.status)" class="flex flex-col sm:flex-row gap-1 sm:gap-2">
+                <td class="px-6 py-4 whitespace-nowrap text-sm">
+                  <div v-if="['pending', 'confirmed'].includes(booking.status)" class="flex gap-2">
                     <button
                       @click="openRescheduleModal(booking)"
-                      class="px-3 py-2 min-h-[44px] text-purple-600 hover:text-purple-800 hover:bg-purple-50 rounded-lg font-medium transition-colors"
+                      class="px-3 py-2 text-purple-600 hover:text-purple-800 hover:bg-purple-50 rounded-lg font-medium transition-colors"
                     >
                       Reschedule
                     </button>
                     <button
                       @click="confirmCancel(booking)"
-                      class="px-3 py-2 min-h-[44px] text-red-600 hover:text-red-800 hover:bg-red-50 rounded-lg font-medium transition-colors"
+                      class="px-3 py-2 text-red-600 hover:text-red-800 hover:bg-red-50 rounded-lg font-medium transition-colors"
                     >
                       Cancel
                     </button>
@@ -265,14 +292,14 @@
             </tbody>
           </table>
         </div>
+        </template>
       </div>
 
       <!-- CALENDAR VIEW -->
       <div v-else-if="viewMode === 'calendar'" class="p-6">
         <!-- Loading State -->
-        <div v-if="loading" class="p-12 text-center">
-          <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600 mx-auto"></div>
-          <p class="mt-4 text-gray-600">Loading bookings...</p>
+        <div v-if="loading" class="p-12">
+          <LoadingSpinner size="md" message="Loading bookings..." />
         </div>
 
         <!-- Calendar -->
@@ -347,7 +374,7 @@
                     >
                       <div class="font-medium truncate">{{ booking.service_name }}</div>
                       <div class="truncate">{{ formatTime(booking.start_time) }}</div>
-                      <div class="truncate text-gray-600 hidden sm:block">{{ booking.customer.full_name }}</div>
+                      <div class="truncate text-gray-600 hidden sm:block">{{ booking.customer?.full_name || 'Unknown' }}</div>
                     </div>
                   </div>
                 </div>
@@ -491,6 +518,9 @@ import { bookingAPI } from '@/lib/api'
 import { supabase } from '@/lib/supabase'
 import { formatDate, formatTime, getStatusClass } from '@/lib/dateUtils'
 import RescheduleModal from '@/components/RescheduleModal.vue'
+import LoadingSpinner from '@/components/ui/LoadingSpinner.vue'
+import ErrorAlert from '@/components/ui/ErrorAlert.vue'
+import EmptyState from '@/components/ui/EmptyState.vue'
 // State
 const bookings = ref([])
 const therapists = ref([])

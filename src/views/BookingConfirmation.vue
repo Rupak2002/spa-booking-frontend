@@ -1,18 +1,16 @@
 <template>
   <div class="max-w-4xl mx-auto px-4 py-8">
     <!-- Loading State -->
-    <div v-if="loading" class="text-center py-12">
-      <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600 mx-auto"></div>
-      <p class="mt-4 text-gray-600">Loading booking details...</p>
+    <div v-if="loading" class="py-12">
+      <LoadingSpinner size="md" message="Loading booking details..." />
     </div>
 
     <!-- Error State -->
-    <div v-else-if="error" class="bg-red-50 border border-red-200 rounded-lg p-6">
-      <h2 class="text-2xl font-bold text-red-800 mb-2">Error</h2>
-      <p class="text-red-700">{{ error }}</p>
-      <router-link 
-        to="/services" 
-        class="mt-4 inline-block px-6 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700"
+    <div v-else-if="error" class="space-y-4">
+      <ErrorAlert title="Booking Not Found" :message="error" />
+      <router-link
+        to="/services"
+        class="inline-block px-6 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700"
       >
         Back to Services
       </router-link>
@@ -108,13 +106,6 @@
         </router-link>
       </div>
 
-      <!-- Info Notice -->
-      <div class="bg-blue-50 border border-blue-200 rounded-lg p-4">
-        <p class="text-sm text-blue-800">
-          ℹ️ <strong>Note:</strong> Payment integration will be added in Phase 2. 
-          For now, clicking "Confirm Booking" will simulate a successful payment.
-        </p>
-      </div>
     </div>
 
     <!-- Success State - CONFIRMED Booking -->
@@ -181,7 +172,10 @@
 import { ref, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useBookingsStore } from '@/stores/bookings'
+import { bookingAPI } from '@/lib/api'
 import CountdownTimer from '@/components/CountdownTimer.vue'
+import LoadingSpinner from '@/components/ui/LoadingSpinner.vue'
+import ErrorAlert from '@/components/ui/ErrorAlert.vue'
 import { formatTime, formatFullDate as formatDate } from '@/lib/dateUtils'
 
 const route = useRoute()
@@ -195,15 +189,21 @@ const error = ref(null)
 const confirming = ref(false)
 
 async function loadBooking() {
-  // For now, use the current booking from store
-  // In production, you'd fetch from API by ID
-  booking.value = bookingsStore.currentBooking
-  
-  if (!booking.value) {
-    error.value = 'Booking not found. It may have expired.'
+  // Use store if available (just navigated from booking flow)
+  // Fall back to API fetch by ID (e.g. after page refresh)
+  if (bookingsStore.currentBooking?.id === bookingId.value) {
+    booking.value = bookingsStore.currentBooking
+    loading.value = false
+    return
   }
-  
-  loading.value = false
+
+  try {
+    booking.value = await bookingAPI.getBookingById(bookingId.value)
+  } catch {
+    error.value = 'Booking not found. It may have expired or been cancelled.'
+  } finally {
+    loading.value = false
+  }
 }
 
 async function confirmBooking() {
